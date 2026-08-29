@@ -1,6 +1,7 @@
-//! The tray icon: the theme's microphone when idle, a solid red disc
-//! while a Dictation runs. Hosts prefer an icon name over a pixmap, so
-//! the active state gives no name at all.
+//! The tray icon: a microphone, light gray when idle and red while a
+//! Dictation runs. Both states are drawn pixmaps: GNOME's AppIndicator
+//! host prefers a theme icon name over a pixmap and keeps a stale pixmap
+//! under a name, so mixing the two leaves ghosts.
 
 use std::sync::mpsc::Sender;
 
@@ -23,26 +24,12 @@ impl Tray for PtwTray {
         "Push to Whisper".into()
     }
 
-    fn icon_name(&self) -> String {
-        if self.active {
-            String::new()
-        } else {
-            "audio-input-microphone-symbolic".into()
-        }
-    }
-
     fn icon_pixmap(&self) -> Vec<Icon> {
-        if self.active {
-            vec![
-                red_disc(16),
-                red_disc(22),
-                red_disc(24),
-                red_disc(32),
-                red_disc(48),
-            ]
-        } else {
-            Vec::new()
-        }
+        let color = if self.active { RED } else { LIGHT_GRAY };
+        [16, 22, 24, 32, 48]
+            .into_iter()
+            .map(|size| microphone(size, color))
+            .collect()
     }
 
     fn activate(&mut self, _x: i32, _y: i32) {
@@ -82,16 +69,28 @@ impl Tray for PtwTray {
     }
 }
 
-/// ARGB32, as the StatusNotifierItem spec wants.
-fn red_disc(size: i32) -> Icon {
+const RED: [u8; 3] = [0xe0, 0x1b, 0x24];
+const LIGHT_GRAY: [u8; 3] = [0xde, 0xdd, 0xda];
+
+/// A microphone glyph as ARGB32 (the StatusNotifierItem format): a
+/// capsule, the cradle arc under it, a stem and a base.
+fn microphone(size: i32, [r, g, b]: [u8; 3]) -> Icon {
+    let scale = size as f32;
+    let px = 1.0 / scale;
     let mut data = Vec::with_capacity((size * size * 4) as usize);
-    let center = (size as f32 - 1.0) / 2.0;
-    let radius = size as f32 * 0.46;
     for y in 0..size {
         for x in 0..size {
-            let d = ((x as f32 - center).powi(2) + (y as f32 - center).powi(2)).sqrt();
-            let alpha = (radius + 0.5 - d).clamp(0.0, 1.0);
-            data.extend_from_slice(&[(alpha * 255.0) as u8, 0xe0, 0x1b, 0x24]);
+            let p = ((x as f32 + 0.5) / scale, (y as f32 + 0.5) / scale);
+            let coverage = [
+                capsule_distance(p),
+                cradle_distance(p),
+                rect_distance(p, (0.5, 0.775), (0.04, 0.065)),
+                rect_distance(p, (0.5, 0.86), (0.19, 0.04)),
+            ]
+            .into_iter()
+            .map(|d| (0.5 - d / px).clamp(0.0, 1.0))
+            .fold(0.0, f32::max);
+            data.extend_from_slice(&[(coverage * 255.0) as u8, r, g, b]);
         }
     }
     Icon {
@@ -99,6 +98,25 @@ fn red_disc(size: i32) -> Icon {
         height: size,
         data,
     }
+}
+
+fn capsule_distance((x, y): (f32, f32)) -> f32 {
+    let (cx, top, bottom, radius) = (0.5, 0.29, 0.43, 0.15);
+    let yc = y.clamp(top, bottom);
+    ((x - cx).powi(2) + (y - yc).powi(2)).sqrt() - radius
+}
+
+/// The lower half of a ring around the capsule.
+fn cradle_distance((x, y): (f32, f32)) -> f32 {
+    let (cx, cy, radius, thickness) = (0.5, 0.43, 0.25, 0.035);
+    let ring = (((x - cx).powi(2) + (y - cy).powi(2)).sqrt() - radius).abs() - thickness;
+    ring.max(cy - y)
+}
+
+fn rect_distance((x, y): (f32, f32), (cx, cy): (f32, f32), (hw, hh): (f32, f32)) -> f32 {
+    let dx = (x - cx).abs() - hw;
+    let dy = (y - cy).abs() - hh;
+    (dx.max(0.0).powi(2) + dy.max(0.0).powi(2)).sqrt() + dx.max(dy).min(0.0)
 }
 
 pub async fn spawn(commands: Sender<Command>) -> Result<Handle<PtwTray>, ksni::Error> {
