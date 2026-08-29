@@ -8,11 +8,10 @@ bottom of each section; delete an entry when it is done, git remembers.
 
 1. **The Key proxy has only done a plain Hold on a real keyboard.**
    ADR 0006 (everything else on the first host pass is verified as of
-   2026-08-29, audio cues included). Still to check: autorepeat of a
-   held key through the proxy (doubled, missing, or continuing after
-   release), a second keyboard plugged in while running, keys stuck down
-   after start or quit, and whether `ptw setup`'s udev rule takes effect
-   without a relogin. Alt+click can only lose its Alt inside the 150 ms
+   2026-08-29, audio cues and autorepeat included). Still to check: a
+   second keyboard plugged in while running, keys stuck down after start
+   or quit, and whether `ptw setup`'s udev rule takes effect without a
+   relogin. Alt+click can only lose its Alt inside the 150 ms
    Deferral, so it is a thing to notice in use, not to test.
 2. **Deferral is a constant (150 ms).** Make it a config knob if anyone
    needs a different trade-off between Alt+click and slow chord presses.
