@@ -6,10 +6,10 @@ bottom of each section; delete an entry when it is done, git remembers.
 
 ## Host bring-up
 
-1. **Nothing desktop-facing has run on the host yet.** Hotkey via evdev,
-   microphone capture and cues, portal typing, the tray icon, the settings
-   dialog, the systemd unit. Each gets its first real test on the host.
-   The tray in particular: ksni needs GNOME's AppIndicator extension.
+1. **Untested on the host:** the settings dialog, the systemd unit, the
+   audio cues, and the tray's red disc (fixed 2026-08-29: the theme icon
+   name was hiding the pixmap). Hotkey, capture, portal typing and
+   streaming were verified on 2026-08-29.
 2. **The Key proxy has not run on a real keyboard.** ADR 0006. Things
    to watch for: keys stuck down after start or quit, the Deferral
    biting Alt+click, autorepeat behaviour of forwarded keys, a second
