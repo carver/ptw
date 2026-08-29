@@ -94,7 +94,9 @@ impl CustomWords {
         I: IntoIterator<Item = S>,
         S: AsRef<str>,
     {
-        let metaphone = DoubleMetaphone::default();
+        // Uncapped: the default 4-character codes make every key sound like
+        // any other that shares its first four sounds.
+        let metaphone = DoubleMetaphone::new(None);
         let entries: Vec<Entry> = words
             .into_iter()
             .map(|w| w.as_ref().trim().to_string())
@@ -326,6 +328,12 @@ mod tests {
         assert_eq!(w3.correct_all("ask chat g p t now"), "ask Chat G P T now");
         assert_eq!(w.correct_all("jason carver said"), "Jason Carver said");
         assert_eq!(w.correct_all("jason, carver said"), "jason, carver said");
+    }
+
+    #[test]
+    fn sharing_the_first_four_sounds_is_not_sounding_alike() {
+        let w = words(&["Jason Carver"]);
+        assert_eq!(w.correct_all("jason carlton said"), "jason carlton said");
     }
 
     #[test]
