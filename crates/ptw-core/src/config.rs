@@ -28,7 +28,8 @@ pub struct EngineConfig {
     pub model: String,
     /// Lookahead in milliseconds; which values exist depends on the Model.
     pub lookahead_ms: u32,
-    /// Threads for recognition. 0 means let the Engine decide.
+    /// Threads for recognition. 2 measured fastest on an Alder Lake laptop
+    /// (ADR 0005); 0 lets the Engine decide.
     pub threads: usize,
 }
 
@@ -71,10 +72,10 @@ impl Default for Config {
 impl Default for EngineConfig {
     fn default() -> Self {
         Self {
-            kind: "sherpa".to_string(),
-            model: "nemotron-en".to_string(),
+            kind: "transcribe".to_string(),
+            model: "nemotron-speech-streaming-en-0.6b-Q8_0.gguf".to_string(),
             lookahead_ms: 560,
-            threads: 0,
+            threads: 2,
         }
     }
 }
