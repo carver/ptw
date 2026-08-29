@@ -1,0 +1,25 @@
+[package]
+name = "ptw"
+description = "Push to Whisper: hold a key, talk, and the words appear where you are typing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ptw"
+path = "src/main.rs"
+
+[dependencies]
+ptw-core = { path = "../ptw-core" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ashpd = { version = "0.13", features = ["remote_desktop", "screencast"] }
+xkeysym = "0.2"
+evdev = "0.13"
+cpal = "0.18"
+ksni = "0.3"
+zbus = { version = "5", features = ["tokio"] }
+hound = "3"
