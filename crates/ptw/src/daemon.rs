@@ -11,19 +11,22 @@ use anyhow::Context;
 use ptw_core::config::{Config, TypistBackend};
 use ptw_core::correction::CustomWords;
 use ptw_core::engine::Engine;
-use ptw_core::hotkey::{HotkeyEvent, HotkeyMachine, KeyEvent};
+use ptw_core::hotkey::HotkeyEvent;
 use ptw_core::layout::Layout;
 use ptw_core::session::{self, Input};
 use ptw_core::typist::Typist;
 use tracing::{error, info, warn};
 
 use crate::audio::{Audio, Cue};
-use crate::{dbus, engines, hotkey_source, layout, portal_typist, tray};
+use crate::hotkey_source::HotkeySource;
+use crate::{dbus, engines, layout, portal_typist, tray};
 
 /// Anything that can change what the daemon is doing.
 #[derive(Debug)]
 pub enum Command {
-    Key(KeyEvent),
+    Hotkey(HotkeyEvent),
+    /// The compositor now believes a modifier key is down, or none are.
+    ModifiersHeld(bool),
     Toggle,
     OpenSettings,
     Quit,
@@ -49,7 +52,8 @@ struct Daemon {
     config: Config,
     config_mtime: Option<SystemTime>,
     layout: Layout,
-    hotkey: HotkeyMachine,
+    source: HotkeySource,
+    modifiers_held: bool,
     words: CustomWords,
     engine: Arc<dyn Engine>,
     typist: Arc<Mutex<Box<dyn Typist>>>,
@@ -95,22 +99,13 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
             None
         }
     };
-    let key_tx = commands.clone();
-    let (keys_tx, keys_rx) = mpsc::channel::<KeyEvent>();
-    hotkey_source::spawn(keys_tx);
-    thread::spawn(move || {
-        for key in keys_rx {
-            if key_tx.send(Command::Key(key)).is_err() {
-                break;
-            }
-        }
-    });
-
     let layout = layout::detect();
+    let source = HotkeySource::spawn(config.chord_in(&layout)?, commands.clone());
     let mut daemon = Daemon {
         config_path: config_path.to_path_buf(),
         config_mtime: mtime(config_path),
-        hotkey: HotkeyMachine::new(config.chord_in(&layout)?),
+        source,
+        modifiers_held: false,
         layout,
         words: CustomWords::new(&config.custom_words),
         config,
@@ -133,14 +128,28 @@ fn mtime(path: &Path) -> Option<SystemTime> {
 
 impl Daemon {
     fn log_hotkey(&self, what: &str) {
-        let chord = self.hotkey.chord();
-        info!(hotkey = %chord, physical = chord.physical(), layout = self.layout.name(), what);
+        let chord = self.source.chord();
+        info!(
+            hotkey = %chord,
+            physical = chord.physical(),
+            layout = self.layout.name(),
+            mode = ?self.source.mode(),
+            what
+        );
     }
 
     fn serve(&mut self, inbox: &Receiver<Command>) {
         loop {
             match inbox.recv_timeout(CONFIG_POLL) {
-                Ok(Command::Key(key)) => self.on_key(key),
+                Ok(Command::Hotkey(HotkeyEvent::Start)) => self.start(),
+                Ok(Command::Hotkey(HotkeyEvent::Stop)) => self.stop(),
+                Ok(Command::Hotkey(HotkeyEvent::Abort)) => self.abort(),
+                Ok(Command::ModifiersHeld(held)) => {
+                    self.modifiers_held = held;
+                    for hold in self.hold.iter().chain(&self.finishing) {
+                        hold.input.send(Input::ModifiersHeld(held)).ok();
+                    }
+                }
                 Ok(Command::Toggle) => {
                     if self.hold.is_some() {
                         self.stop();
@@ -165,22 +174,6 @@ impl Daemon {
         }
     }
 
-    fn on_key(&mut self, key: KeyEvent) {
-        let modifiers_before = self.hotkey.modifiers_held();
-        match self.hotkey.on_key(key) {
-            Some(HotkeyEvent::Start) => self.start(),
-            Some(HotkeyEvent::Stop) => self.stop(),
-            Some(HotkeyEvent::Abort) => self.abort(),
-            None => {}
-        }
-        let modifiers_now = self.hotkey.modifiers_held();
-        if modifiers_now != modifiers_before {
-            for hold in self.hold.iter().chain(&self.finishing) {
-                hold.input.send(Input::ModifiersHeld(modifiers_now)).ok();
-            }
-        }
-    }
-
     fn reap_finished(&mut self) {
         let (done, waiting): (Vec<Hold>, Vec<Hold>) = self
             .finishing
@@ -195,9 +188,7 @@ impl Daemon {
             return;
         }
         let (input, rx) = mpsc::channel::<Input>();
-        input
-            .send(Input::ModifiersHeld(self.hotkey.modifiers_held()))
-            .ok();
+        input.send(Input::ModifiersHeld(self.modifiers_held)).ok();
         let engine = Arc::clone(&self.engine);
         let words = self.words.clone();
         let typist = Arc::clone(&self.typist);
@@ -263,7 +254,7 @@ impl Daemon {
                 }
                 self.layout = layout::detect();
                 match config.chord_in(&self.layout) {
-                    Ok(chord) => self.hotkey = HotkeyMachine::new(chord),
+                    Ok(chord) => self.source.set_chord(chord),
                     Err(e) => warn!(error = %e, "keeping the old hotkey"),
                 }
                 self.words = CustomWords::new(&config.custom_words);

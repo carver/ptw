@@ -110,9 +110,15 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         Err(e) => line(false, "portal", e.to_string()),
     }
     line(
-        Path::new("/dev/uinput").exists(),
+        hotkey_source::uinput_writable(),
         "uinput",
-        "/dev/uinput (only needed for the uinput typist)",
+        if hotkey_source::uinput_writable() {
+            "/dev/uinput writable: the Hotkey is grabbed and streams while held"
+        } else if Path::new("/dev/uinput").exists() {
+            "/dev/uinput not writable: the Hotkey leaks to apps and text waits for its release; run `ptw setup`"
+        } else {
+            "/dev/uinput missing: run `ptw setup`"
+        },
     );
 
     let wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();

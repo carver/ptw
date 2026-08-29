@@ -74,7 +74,74 @@ pub fn run(config_path: &Path, args: Args) -> anyhow::Result<()> {
         }
         println!("enable and start it with: systemctl --user enable --now ptw");
     }
+    grant_uinput(args.dry_run)?;
     download_default_model(args.dry_run)?;
+    Ok(())
+}
+
+const UDEV_RULE: &str = "\
+# ptw: let the input group open /dev/uinput (Hotkey grab, uinput typist)
+KERNEL==\"uinput\", SUBSYSTEM==\"misc\", GROUP=\"input\", MODE=\"0660\", OPTIONS+=\"static_node=uinput\"
+";
+const UDEV_RULE_PATH: &str = "/etc/udev/rules.d/70-ptw-uinput.rules";
+const MODULES_CONF_PATH: &str = "/etc/modules-load.d/ptw-uinput.conf";
+
+/// Makes `/dev/uinput` writable for the `input` group, through sudo.
+fn grant_uinput(dry_run: bool) -> anyhow::Result<()> {
+    if crate::hotkey_source::uinput_writable() {
+        println!("ok   /dev/uinput is writable");
+        return Ok(());
+    }
+    println!("TODO /dev/uinput is not writable. Writing {UDEV_RULE_PATH}:");
+    for rule_line in UDEV_RULE.lines() {
+        println!("       {rule_line}");
+    }
+    let steps: [(&[&str], Option<&str>); 5] = [
+        (&["tee", UDEV_RULE_PATH], Some(UDEV_RULE)),
+        (&["tee", MODULES_CONF_PATH], Some("uinput\n")),
+        (&["modprobe", "uinput"], None),
+        (&["udevadm", "control", "--reload-rules"], None),
+        (&["udevadm", "trigger", "--name-match=uinput"], None),
+    ];
+    for (argv, stdin) in steps {
+        println!("       sudo {}", argv.join(" "));
+        if dry_run {
+            continue;
+        }
+        sudo(argv, stdin)?;
+    }
+    if !dry_run {
+        if crate::hotkey_source::uinput_writable() {
+            println!("ok   /dev/uinput is writable");
+        } else {
+            println!(
+                "TODO /dev/uinput still not writable; log out and back in if you just joined the `input` group"
+            );
+        }
+    }
+    Ok(())
+}
+
+fn sudo(argv: &[&str], stdin: Option<&str>) -> anyhow::Result<()> {
+    use std::io::Write;
+    use std::process::Stdio;
+    let mut child = Command::new("sudo")
+        .args(argv)
+        .stdin(if stdin.is_some() {
+            Stdio::piped()
+        } else {
+            Stdio::inherit()
+        })
+        .stdout(Stdio::null())
+        .spawn()
+        .context("run sudo")?;
+    if let (Some(text), Some(mut pipe)) = (stdin, child.stdin.take()) {
+        pipe.write_all(text.as_bytes())?;
+    }
+    let status = child.wait()?;
+    if !status.success() {
+        return Err(anyhow!("`sudo {}` failed ({status})", argv.join(" ")));
+    }
     Ok(())
 }
 
