@@ -18,6 +18,10 @@ use crate::typist::Typist;
 #[derive(Debug)]
 pub enum Input {
     Audio(Vec<f32>),
+    /// A modifier key went down (`true`) or the last one came up. While
+    /// one is down, text waits: the compositor would turn it into
+    /// shortcuts (Alt+Space opens GNOME's window menu).
+    ModifiersHeld(bool),
     /// The Hotkey was released: Flush and type the rest.
     Stop,
     /// The Dictation was aborted: type nothing more.
@@ -27,11 +31,54 @@ pub enum Input {
 /// How often to ask the Engine for text while audio keeps coming.
 const DECODE_TICK: Duration = Duration::from_millis(100);
 
+/// How long after Stop to wait for the modifiers to come up before the
+/// remaining text is dropped rather than typed as shortcuts.
+const RELEASE_GRACE: Duration = Duration::from_secs(5);
+
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Outcome {
     /// Everything typed, including the trailing space.
     pub typed: String,
+    /// Text that was ready but never typed because modifiers stayed down.
+    pub dropped: String,
     pub aborted: bool,
+}
+
+/// Holds text back while a modifier key is down.
+#[derive(Default)]
+struct Gate {
+    modifiers_held: bool,
+    pending: String,
+}
+
+impl Gate {
+    fn offer(&mut self, text: &str, typist: &mut dyn Typist, outcome: &mut Outcome) {
+        self.pending.push_str(text);
+        if !self.modifiers_held {
+            self.flush(typist, outcome);
+        }
+    }
+
+    fn set_modifiers_held(&mut self, held: bool, typist: &mut dyn Typist, outcome: &mut Outcome) {
+        self.modifiers_held = held;
+        if !held {
+            self.flush(typist, outcome);
+        }
+    }
+
+    fn flush(&mut self, typist: &mut dyn Typist, outcome: &mut Outcome) {
+        if self.pending.is_empty() {
+            return;
+        }
+        let text = std::mem::take(&mut self.pending);
+        match typist.type_text(&text) {
+            Ok(()) => {
+                debug!(text, "typed");
+                outcome.typed.push_str(&text);
+            }
+            Err(e) => warn!(error = %e, text, "typing failed; text dropped"),
+        }
+    }
 }
 
 /// Feeds audio from `input` into a fresh stream of `engine` and types what
@@ -47,11 +94,15 @@ pub fn run(
     let mut stream = engine.open_stream()?;
     let mut dictation = Dictation::new(words.clone());
     let mut outcome = Outcome::default();
+    let mut gate = Gate::default();
     let mut next_tick = Instant::now() + DECODE_TICK;
     loop {
         let timeout = next_tick.saturating_duration_since(Instant::now());
         match input.recv_timeout(timeout) {
             Ok(Input::Audio(samples)) => stream.feed(&samples),
+            Ok(Input::ModifiersHeld(held)) => {
+                gate.set_modifiers_held(held, typist, &mut outcome);
+            }
             Ok(Input::Stop) | Err(RecvTimeoutError::Disconnected) => break,
             Ok(Input::Abort) => {
                 outcome.aborted = true;
@@ -60,13 +111,20 @@ pub fn run(
             Err(RecvTimeoutError::Timeout) => {}
         }
         if Instant::now() >= next_tick {
-            emit(&mut *stream, &mut dictation, typist, &mut outcome);
+            emit(
+                &mut *stream,
+                &mut dictation,
+                typist,
+                &mut gate,
+                &mut outcome,
+            );
             next_tick = Instant::now() + DECODE_TICK;
         }
     }
     let final_text = stream.finish();
     debug!(final_text, "flush");
-    type_text(typist, &dictation.finish(&final_text), &mut outcome);
+    gate.offer(&dictation.finish(&final_text), typist, &mut outcome);
+    wait_for_modifiers(input, &mut gate, typist, &mut outcome);
     Ok(outcome)
 }
 
@@ -74,20 +132,37 @@ fn emit(
     stream: &mut dyn EngineStream,
     dictation: &mut Dictation,
     typist: &mut dyn Typist,
+    gate: &mut Gate,
     outcome: &mut Outcome,
 ) {
     let transcript = stream.transcript();
     let text = dictation.update(&transcript.committed);
-    type_text(typist, &text, outcome);
+    gate.offer(&text, typist, outcome);
 }
 
-fn type_text(typist: &mut dyn Typist, text: &str, outcome: &mut Outcome) {
-    if text.is_empty() {
-        return;
+/// After Stop, the chord's own modifier is usually still on its way up.
+fn wait_for_modifiers(
+    input: &Receiver<Input>,
+    gate: &mut Gate,
+    typist: &mut dyn Typist,
+    outcome: &mut Outcome,
+) {
+    let deadline = Instant::now() + RELEASE_GRACE;
+    while gate.modifiers_held && !gate.pending.is_empty() {
+        let timeout = deadline.saturating_duration_since(Instant::now());
+        match input.recv_timeout(timeout) {
+            Ok(Input::ModifiersHeld(held)) => gate.set_modifiers_held(held, typist, outcome),
+            Ok(Input::Abort) => break,
+            Ok(Input::Audio(_) | Input::Stop) => {}
+            Err(RecvTimeoutError::Timeout | RecvTimeoutError::Disconnected) => break,
+        }
     }
-    match typist.type_text(text) {
-        Ok(()) => outcome.typed.push_str(text),
-        Err(e) => warn!(error = %e, text, "typing failed; text dropped"),
+    if !gate.pending.is_empty() {
+        outcome.dropped = std::mem::take(&mut gate.pending);
+        warn!(
+            text = outcome.dropped,
+            "modifier keys still held; text dropped rather than typed as shortcuts"
+        );
     }
 }
 
@@ -118,6 +193,7 @@ mod tests {
             outcome,
             Outcome {
                 typed: "hello there Caitlyn ".into(),
+                dropped: String::new(),
                 aborted: false
             }
         );
@@ -126,6 +202,44 @@ mod tests {
             "streamed in pieces, got {:?}",
             typist.chunks
         );
+    }
+
+    #[test]
+    fn text_waits_until_the_modifiers_come_up() {
+        let engine = ScriptedEngine::word_by_word("hold to talk");
+        let (tx, rx) = mpsc::channel();
+        let mut typist = RecordingTypist::default();
+        let feeder = std::thread::spawn(move || {
+            tx.send(Input::ModifiersHeld(true)).unwrap();
+            for _ in 0..4 {
+                tx.send(Input::Audio(vec![0.0; 1280])).unwrap();
+                std::thread::sleep(Duration::from_millis(120));
+            }
+            tx.send(Input::Stop).unwrap();
+            std::thread::sleep(Duration::from_millis(100));
+            tx.send(Input::ModifiersHeld(false)).unwrap();
+            std::thread::sleep(Duration::from_millis(100));
+        });
+        let outcome = run(&engine, &CustomWords::default(), &rx, &mut typist).unwrap();
+        feeder.join().unwrap();
+        assert_eq!(typist.chunks, vec!["hold to talk ".to_string()]);
+        assert_eq!(outcome.typed, "hold to talk ");
+        assert_eq!(outcome.dropped, "");
+    }
+
+    #[test]
+    fn text_is_dropped_when_the_modifiers_never_come_up() {
+        let engine = ScriptedEngine::word_by_word("one two");
+        let (tx, rx) = mpsc::channel();
+        let mut typist = RecordingTypist::default();
+        tx.send(Input::ModifiersHeld(true)).unwrap();
+        tx.send(Input::Audio(vec![0.0; 1280])).unwrap();
+        tx.send(Input::Stop).unwrap();
+        drop(tx);
+        let outcome = run(&engine, &CustomWords::default(), &rx, &mut typist).unwrap();
+        assert_eq!(typist.text(), "");
+        assert_eq!(outcome.typed, "");
+        assert_eq!(outcome.dropped, "one two ");
     }
 
     #[test]

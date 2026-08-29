@@ -36,6 +36,14 @@ struct Hold {
     worker: JoinHandle<()>,
 }
 
+impl Hold {
+    fn report(self) {
+        if self.worker.join().is_err() {
+            error!("dictation thread panicked");
+        }
+    }
+}
+
 struct Daemon {
     config_path: PathBuf,
     config: Config,
@@ -47,6 +55,9 @@ struct Daemon {
     typist: Arc<Mutex<Box<dyn Typist>>>,
     audio: Audio,
     hold: Option<Hold>,
+    /// Holds that have stopped but may still be waiting to type: the
+    /// chord's modifier is usually still down when the Hold ends.
+    finishing: Vec<Hold>,
     tray: Option<ksni::Handle<tray::PtwTray>>,
     runtime: tokio::runtime::Handle,
 }
@@ -107,6 +118,7 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         typist: Arc::new(Mutex::new(typist)),
         audio: Audio::spawn(),
         hold: None,
+        finishing: Vec::new(),
         tray,
         runtime: runtime.handle().clone(),
     };
@@ -128,12 +140,7 @@ impl Daemon {
     fn serve(&mut self, inbox: &Receiver<Command>) {
         loop {
             match inbox.recv_timeout(CONFIG_POLL) {
-                Ok(Command::Key(key)) => match self.hotkey.on_key(key) {
-                    Some(HotkeyEvent::Start) => self.start(),
-                    Some(HotkeyEvent::Stop) => self.stop(),
-                    Some(HotkeyEvent::Abort) => self.abort(),
-                    None => {}
-                },
+                Ok(Command::Key(key)) => self.on_key(key),
                 Ok(Command::Toggle) => {
                     if self.hold.is_some() {
                         self.stop();
@@ -153,8 +160,34 @@ impl Daemon {
                 }
                 Err(RecvTimeoutError::Timeout) => {}
             }
+            self.reap_finished();
             self.reload_config_if_changed();
         }
+    }
+
+    fn on_key(&mut self, key: KeyEvent) {
+        let modifiers_before = self.hotkey.modifiers_held();
+        match self.hotkey.on_key(key) {
+            Some(HotkeyEvent::Start) => self.start(),
+            Some(HotkeyEvent::Stop) => self.stop(),
+            Some(HotkeyEvent::Abort) => self.abort(),
+            None => {}
+        }
+        let modifiers_now = self.hotkey.modifiers_held();
+        if modifiers_now != modifiers_before {
+            for hold in self.hold.iter().chain(&self.finishing) {
+                hold.input.send(Input::ModifiersHeld(modifiers_now)).ok();
+            }
+        }
+    }
+
+    fn reap_finished(&mut self) {
+        let (done, waiting): (Vec<Hold>, Vec<Hold>) = self
+            .finishing
+            .drain(..)
+            .partition(|hold| hold.worker.is_finished());
+        self.finishing = waiting;
+        done.into_iter().for_each(Hold::report);
     }
 
     fn start(&mut self) {
@@ -162,6 +195,9 @@ impl Daemon {
             return;
         }
         let (input, rx) = mpsc::channel::<Input>();
+        input
+            .send(Input::ModifiersHeld(self.hotkey.modifiers_held()))
+            .ok();
         let engine = Arc::clone(&self.engine);
         let words = self.words.clone();
         let typist = Arc::clone(&self.typist);
@@ -204,9 +240,7 @@ impl Daemon {
         if self.config.audio.cues {
             self.audio.play(cue);
         }
-        if hold.worker.join().is_err() {
-            error!("dictation thread panicked");
-        }
+        self.finishing.push(hold);
         self.set_tray_active(false);
     }
 
