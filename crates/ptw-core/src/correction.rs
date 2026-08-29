@@ -6,8 +6,9 @@
 //! "Caitlyn" even though the first letters differ). Runs of words are tried
 //! too, so "Chat G P T" can become "ChatGPT" when the list says so. The
 //! Engine splits words it does not know ("Bernal" comes back as "burn
-//! all"), so a run may be one word longer than its entry, if it sounds
-//! the same.
+//! all"), so when the list has phrases a run may be one word longer than
+//! its entry, if it sounds the same. A list of single words does not pay
+//! the extra Hold-back for that.
 
 use rphonetic::{DoubleMetaphone, Encoder};
 
@@ -19,7 +20,8 @@ const ACCEPT_BELOW: f64 = 0.15;
 const PHONETIC_BOOST: f64 = 0.3;
 /// Keys shorter than this must match exactly; "cat" must not become "Kat".
 const MIN_FUZZY_LEN: usize = 4;
-/// How many more recognized words than its own an entry may cover.
+/// How many more recognized words than its own an entry may cover, once
+/// the list has a phrase.
 const SPLIT_ALLOWANCE: usize = 1;
 
 #[derive(Clone, Debug)]
@@ -138,12 +140,13 @@ impl CustomWords {
     }
 
     /// The longest run of recognized words a Correction can cover, and so
-    /// the Hold-back. 1 when there is nothing to correct.
+    /// the Hold-back: 1 for a list of single words, one more than the
+    /// longest phrase otherwise.
     pub fn window(&self) -> usize {
-        if self.entries.is_empty() {
-            1
-        } else {
+        if self.max_words > 1 {
             self.max_words + SPLIT_ALLOWANCE
+        } else {
+            1
         }
     }
 
@@ -340,6 +343,9 @@ mod tests {
         assert_eq!(w.window(), 3);
         assert_eq!(w.correct_all("ask chat g p t"), "ask chat g p t");
         assert_eq!(w.correct_all("ask chat gpt"), "ask ChatGPT");
+        let alone = words(&["ChatGPT"]);
+        assert_eq!(alone.window(), 1);
+        assert_eq!(alone.correct_all("ask chat gpt"), "ask chat gpt");
         let w3 = CustomWords::new(["Chat G P T"]);
         assert_eq!(w3.correct_all("ask chat g p t now"), "ask Chat G P T now");
         assert_eq!(w.correct_all("jason carver said"), "Jason Carver said");
@@ -356,6 +362,7 @@ mod tests {
     fn a_name_the_engine_split_is_merged_when_it_sounds_right() {
         let w = words(&["Bernal Heights", "Caitlyn"]);
         assert_eq!(w.window(), 3);
+        assert_eq!(words(&["Caitlyn"]).window(), 1);
         assert_eq!(
             w.correct_all("possibly burn all heights onto Linux"),
             "possibly Bernal Heights onto Linux"

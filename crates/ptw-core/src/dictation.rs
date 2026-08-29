@@ -115,11 +115,11 @@ mod tests {
     }
 
     #[test]
-    fn single_word_lists_release_each_word_as_the_one_after_next_begins() {
+    fn single_word_lists_release_each_word_as_the_next_begins() {
         let mut d = dictation(&["Caitlyn"]);
-        assert_eq!(d.update("Kaitlin said"), "");
-        assert_eq!(d.update("Kaitlin said hi"), "Caitlyn ");
-        assert_eq!(d.finish("Kaitlin said hi"), "said hi ");
+        assert_eq!(d.update("Kaitlin said"), "Caitlyn ");
+        assert_eq!(d.update("Kaitlin said hi"), "said ");
+        assert_eq!(d.finish("Kaitlin said hi"), "hi ");
     }
 
     #[test]
