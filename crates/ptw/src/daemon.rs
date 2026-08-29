@@ -12,12 +12,13 @@ use ptw_core::config::{Config, TypistBackend};
 use ptw_core::correction::CustomWords;
 use ptw_core::engine::Engine;
 use ptw_core::hotkey::{HotkeyEvent, HotkeyMachine, KeyEvent};
+use ptw_core::layout::Layout;
 use ptw_core::session::{self, Input};
 use ptw_core::typist::Typist;
 use tracing::{error, info, warn};
 
 use crate::audio::{Audio, Cue};
-use crate::{dbus, engines, hotkey_source, portal_typist, tray};
+use crate::{dbus, engines, hotkey_source, layout, portal_typist, tray};
 
 /// Anything that can change what the daemon is doing.
 #[derive(Debug)]
@@ -39,6 +40,7 @@ struct Daemon {
     config_path: PathBuf,
     config: Config,
     config_mtime: Option<SystemTime>,
+    layout: Layout,
     hotkey: HotkeyMachine,
     words: CustomWords,
     engine: Arc<dyn Engine>,
@@ -93,10 +95,12 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         }
     });
 
+    let layout = layout::detect();
     let mut daemon = Daemon {
         config_path: config_path.to_path_buf(),
         config_mtime: mtime(config_path),
-        hotkey: HotkeyMachine::new(config.chord()?),
+        hotkey: HotkeyMachine::new(config.chord_in(&layout)?),
+        layout,
         words: CustomWords::new(&config.custom_words),
         config,
         engine,
@@ -106,7 +110,7 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         tray,
         runtime: runtime.handle().clone(),
     };
-    info!(hotkey = %daemon.hotkey.chord(), "ptw ready");
+    daemon.log_hotkey("ptw ready");
     daemon.serve(&inbox);
     Ok(())
 }
@@ -116,6 +120,11 @@ fn mtime(path: &Path) -> Option<SystemTime> {
 }
 
 impl Daemon {
+    fn log_hotkey(&self, what: &str) {
+        let chord = self.hotkey.chord();
+        info!(hotkey = %chord, physical = chord.physical(), layout = self.layout.name(), what);
+    }
+
     fn serve(&mut self, inbox: &Receiver<Command>) {
         loop {
             match inbox.recv_timeout(CONFIG_POLL) {
@@ -218,13 +227,14 @@ impl Daemon {
                 if config.engine != self.config.engine || config.typist != self.config.typist {
                     warn!("engine or typist settings changed; restart the daemon to apply them");
                 }
-                match config.chord() {
+                self.layout = layout::detect();
+                match config.chord_in(&self.layout) {
                     Ok(chord) => self.hotkey = HotkeyMachine::new(chord),
                     Err(e) => warn!(error = %e, "keeping the old hotkey"),
                 }
                 self.words = CustomWords::new(&config.custom_words);
-                info!(hotkey = %self.hotkey.chord(), words = config.custom_words.len(), "config reloaded");
                 self.config = config;
+                self.log_hotkey("config reloaded");
             }
             Err(e) => warn!(error = %e, "config not reloaded"),
         }

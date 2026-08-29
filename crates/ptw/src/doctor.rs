@@ -5,7 +5,7 @@ use std::process::Command;
 
 use ptw_core::config::Config;
 
-use crate::{audio, dbus, engines, hotkey_source, portal_typist};
+use crate::{audio, dbus, engines, hotkey_source, layout, portal_typist};
 
 fn line(ok: bool, what: &str, detail: impl AsRef<str>) {
     println!(
@@ -29,6 +29,20 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
                     config.custom_words.len()
                 ),
             );
+            let layout = layout::detect();
+            match config.chord_in(&layout) {
+                Ok(chord) => line(
+                    true,
+                    "layout",
+                    format!(
+                        "{} (hotkey {} is physical {})",
+                        layout.name(),
+                        chord,
+                        chord.physical()
+                    ),
+                ),
+                Err(e) => line(false, "layout", format!("{} ({e})", layout.name())),
+            }
             let engine_ok = engines::build(&config.engine).is_ok();
             line(
                 engine_ok,

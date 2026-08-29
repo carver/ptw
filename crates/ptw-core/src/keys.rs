@@ -27,6 +27,22 @@ pub const RIGHT_ALT: KeyCode = KeyCode(100);
 pub const LEFT_SUPER: KeyCode = KeyCode(125);
 pub const RIGHT_SUPER: KeyCode = KeyCode(126);
 
+/// Shift, Ctrl, Alt and Super on either side: the keys the compositor
+/// combines with whatever is typed while they are down.
+pub fn is_modifier(code: KeyCode) -> bool {
+    [
+        LEFT_CTRL,
+        LEFT_SHIFT,
+        RIGHT_SHIFT,
+        LEFT_ALT,
+        RIGHT_CTRL,
+        RIGHT_ALT,
+        LEFT_SUPER,
+        RIGHT_SUPER,
+    ]
+    .contains(&code)
+}
+
 const NAMES: &[(&str, u16)] = &[
     ("Esc", 1),
     ("1", 2),
@@ -168,6 +184,25 @@ pub fn key_code(name: &str) -> Option<KeyCode> {
         .map(|(_, code)| KeyCode(*code))
 }
 
+/// The character each key types under a US QWERTY layout: the letters,
+/// digits and punctuation from the table above.
+pub fn qwerty_chars() -> impl Iterator<Item = (char, KeyCode)> {
+    let named = NAMES.iter().filter_map(|(name, code)| {
+        let mut chars = name.chars();
+        let ch = chars.next()?;
+        chars.next().is_none().then_some((ch, KeyCode(*code)))
+    });
+    let symbols = SYMBOL_ALIASES.iter().filter_map(|(alias, canonical)| {
+        let mut chars = alias.chars();
+        let ch = chars.next()?;
+        if chars.next().is_some() {
+            return None;
+        }
+        Some((ch, key_code(canonical)?))
+    });
+    named.chain(symbols)
+}
+
 /// The config name for a key code, if it is one we list.
 pub fn key_name(code: KeyCode) -> Option<&'static str> {
     NAMES
@@ -189,6 +224,18 @@ mod tests {
         assert_eq!(key_code("AltGr"), Some(RIGHT_ALT));
         assert_eq!(key_code("Alt"), None);
         assert_eq!(key_code("nonsense"), None);
+    }
+
+    #[test]
+    fn qwerty_chars_cover_letters_digits_and_punctuation() {
+        let chars: std::collections::BTreeMap<char, KeyCode> = qwerty_chars().collect();
+        assert_eq!(chars[&'z'], KeyCode(44));
+        assert_eq!(chars[&'1'], KeyCode(2));
+        assert_eq!(chars[&';'], KeyCode(39));
+        assert_eq!(chars[&'/'], KeyCode(53));
+        assert!(!chars.contains_key(&'F'));
+        assert!(is_modifier(RIGHT_ALT));
+        assert!(!is_modifier(KeyCode(44)));
     }
 
     #[test]

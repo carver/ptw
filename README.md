@@ -28,7 +28,7 @@ choices is in `docs/adr/`; the interview that started it is in
 ## Build
 
 ```sh
-sudo apt install build-essential cmake pkg-config libasound2-dev
+sudo apt install build-essential cmake pkg-config libasound2-dev libxkbcommon-dev
 cargo install --path crates/ptw
 ```
 

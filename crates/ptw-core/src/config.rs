@@ -122,8 +122,16 @@ pub enum ConfigError {
 }
 
 impl Config {
+    /// The Hotkey under a QWERTY layout; the daemon uses [`Self::chord_in`].
     pub fn chord(&self) -> Result<Chord, crate::hotkey::ChordParseError> {
         self.hotkey.parse()
+    }
+
+    pub fn chord_in(
+        &self,
+        layout: &crate::layout::Layout,
+    ) -> Result<Chord, crate::hotkey::ChordParseError> {
+        Chord::parse(&self.hotkey, layout)
     }
 
     /// Reads the file, or returns the defaults when it does not exist.

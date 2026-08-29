@@ -35,8 +35,8 @@ user exact commands and ask for the output.
 
 ## Build deps
 
-`cmake`, a C++ toolchain, `pkg-config`, `libasound2-dev`. transcribe.cpp
-compiles from the crate in about a minute.
+`cmake`, a C++ toolchain, `pkg-config`, `libasound2-dev`, `libxkbcommon-dev`.
+transcribe.cpp compiles from the crate in about a minute.
 
 ## Working with the user
 

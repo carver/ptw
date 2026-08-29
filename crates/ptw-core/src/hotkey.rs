@@ -8,6 +8,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::keys::{self, KeyCode};
+use crate::layout::Layout;
 
 /// One member of a chord: a key, or any of several keys (`Alt` is either Alt).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -17,7 +18,7 @@ pub struct ChordKey {
 }
 
 impl ChordKey {
-    fn parse(name: &str) -> Result<Self, ChordParseError> {
+    fn parse(name: &str, layout: &Layout) -> Result<Self, ChordParseError> {
         let side_agnostic: &[(&str, [KeyCode; 2])] = &[
             ("Alt", [keys::LEFT_ALT, keys::RIGHT_ALT]),
             ("Ctrl", [keys::LEFT_CTRL, keys::RIGHT_CTRL]),
@@ -33,6 +34,15 @@ impl ChordKey {
         {
             return Ok(Self {
                 name: (*canonical).to_string(),
+                codes: codes.to_vec(),
+            });
+        }
+        let mut chars = name.chars();
+        if let (Some(ch), None) = (chars.next(), chars.next())
+            && let Some(codes) = layout.codes(ch.to_ascii_lowercase())
+        {
+            return Ok(Self {
+                name: ch.to_ascii_lowercase().to_string(),
                 codes: codes.to_vec(),
             });
         }
@@ -66,16 +76,25 @@ pub enum ChordParseError {
     Duplicate(String),
 }
 
+/// Parses with a QWERTY layout; see [`Chord::parse`] for the user's.
 impl FromStr for Chord {
     type Err = ChordParseError;
 
     fn from_str(text: &str) -> Result<Self, Self::Err> {
+        Self::parse(text, &Layout::qwerty())
+    }
+}
+
+impl Chord {
+    /// Single-character names (`z`, `/`) mean the key that types that
+    /// character under `layout`; everything else names a physical key.
+    pub fn parse(text: &str, layout: &Layout) -> Result<Self, ChordParseError> {
         let mut keys = Vec::new();
         for part in text.split('+').map(str::trim) {
             if part.is_empty() {
                 return Err(ChordParseError::Empty);
             }
-            let key = ChordKey::parse(part)?;
+            let key = ChordKey::parse(part, layout)?;
             if keys
                 .iter()
                 .any(|existing: &ChordKey| existing.codes.iter().any(|c| key.matches(*c)))
@@ -107,6 +126,27 @@ impl Chord {
     /// Every key code that could take part in this chord.
     pub fn codes(&self) -> impl Iterator<Item = KeyCode> + '_ {
         self.keys.iter().flat_map(|k| k.codes.iter().copied())
+    }
+
+    /// The physical keys behind the chord, for logs: `Alt+z` on Dvorak is
+    /// `Alt+Slash`.
+    pub fn physical(&self) -> String {
+        let names: Vec<String> = self
+            .keys
+            .iter()
+            .map(|k| {
+                if k.codes.len() > 1 && k.codes.iter().all(|c| keys::is_modifier(*c)) {
+                    k.name.clone()
+                } else {
+                    k.codes
+                        .iter()
+                        .map(|c| c.to_string())
+                        .collect::<Vec<_>>()
+                        .join("/")
+                }
+            })
+            .collect();
+        names.join("+")
     }
 }
 
@@ -185,6 +225,13 @@ impl HotkeyMachine {
         self.state == State::Holding
     }
 
+    /// Whether a modifier key is down. Text typed now would reach the
+    /// focused app as shortcuts (Alt+Space opens GNOME's window menu), so
+    /// the Typist must wait until this is false.
+    pub fn modifiers_held(&self) -> bool {
+        self.held.iter().any(|c| keys::is_modifier(*c))
+    }
+
     pub fn on_key(&mut self, event: KeyEvent) -> Option<HotkeyEvent> {
         match event.action {
             KeyAction::Repeat => None,
@@ -239,7 +286,42 @@ mod tests {
         assert_eq!(chord("alt + Z").to_string(), "Alt+z");
         assert_eq!(chord("RightCtrl").to_string(), "RightCtrl");
         assert_eq!(chord("ctrl+shift+space").to_string(), "Ctrl+Shift+Space");
-        assert_eq!(chord("Alt+\\").to_string(), "Alt+Backslash");
+        assert_eq!(chord("Alt+\\").to_string(), "Alt+\\");
+        assert_eq!(chord("Alt+\\").physical(), "Alt+Backslash");
+    }
+
+    #[test]
+    fn single_characters_follow_the_layout() {
+        let dvorak = Layout::new(
+            "us+dvorak",
+            [
+                ('z', key_code("Slash").unwrap()),
+                (';', key_code("z").unwrap()),
+            ],
+        );
+        let on_dvorak = Chord::parse("Alt+z", &dvorak).unwrap();
+        assert_eq!(on_dvorak.to_string(), "Alt+z");
+        assert_eq!(on_dvorak.physical(), "Alt+Slash");
+        assert_eq!(Chord::parse("Alt+;", &dvorak).unwrap().physical(), "Alt+z");
+        assert_eq!(
+            Chord::parse("RightCtrl", &dvorak).unwrap().physical(),
+            "RightCtrl"
+        );
+        assert_eq!(chord("Alt+z").physical(), "Alt+z");
+    }
+
+    #[test]
+    fn reports_held_modifiers() {
+        let z = key_code("z").unwrap();
+        let mut m = HotkeyMachine::new(chord("Alt+z"));
+        assert!(!m.modifiers_held());
+        m.on_key(KeyEvent::press(LEFT_ALT));
+        m.on_key(KeyEvent::press(z));
+        assert!(m.modifiers_held());
+        m.on_key(KeyEvent::release(z));
+        assert!(m.modifiers_held());
+        m.on_key(KeyEvent::release(LEFT_ALT));
+        assert!(!m.modifiers_held());
     }
 
     #[test]

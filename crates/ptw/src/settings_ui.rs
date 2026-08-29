@@ -18,6 +18,7 @@ struct App {
     saved: Config,
     custom_words_text: String,
     microphones: Vec<String>,
+    layout: ptw_core::layout::Layout,
     status: String,
 }
 
@@ -30,6 +31,7 @@ impl App {
             saved: config.clone(),
             config,
             microphones: audio::list_inputs(),
+            layout: crate::layout::detect(),
             status: String::new(),
         })
     }
@@ -45,9 +47,7 @@ impl App {
     }
 
     fn hotkey_problem(&self) -> Option<String> {
-        self.config
-            .hotkey
-            .parse::<Chord>()
+        Chord::parse(&self.config.hotkey, &self.layout)
             .err()
             .map(|e| e.to_string())
     }

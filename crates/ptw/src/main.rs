@@ -6,6 +6,7 @@ mod dbus;
 mod doctor;
 mod engines;
 mod hotkey_source;
+mod layout;
 mod portal_typist;
 mod settings_ui;
 mod setup;
