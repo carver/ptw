@@ -36,8 +36,8 @@ cargo install --path crates/ptw
 ```
 
 The Engine is Nemotron Speech Streaming EN 0.6B on transcribe.cpp (ADR
-0005): about 1 GB of RAM, 0.3x real time on two threads of an Alder Lake
-laptop, a word committed roughly half a second after you say it.
+0005): about 1 GB of RAM, a fifth of two threads of an Alder Lake laptop,
+a word committed roughly half a second after you say it.
 
 ## Set up
 

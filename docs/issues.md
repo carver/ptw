@@ -17,45 +17,42 @@ bottom of each section; delete an entry when it is done, git remembers.
    udev rule takes effect without a relogin.
 3. **Deferral is a constant (150 ms).** Make it a config knob if anyone
    needs a different trade-off between Alt+click and slow chord presses.
-4. **Thread count on the host.** In the sandbox 2 threads beat 8 by
-   1.7–1.9x, which is surprising enough to re-measure with real use.
-   Default stays 2 until then.
 
 ## Correction and hold-back
 
-5. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the
+4. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the
    ×0.3 phonetic boost were tuned to fix "career"→"Carver" on one sample.
    Revisit with a week of real dictation; keep a list of misfires.
-6. **Names still wrong on the samples:** a neighbourhood (sometimes),
+5. **Names still wrong on the samples:** a neighbourhood (sometimes),
    a first name, "ptw".
 
 ## Engine
 
-7. **160 ms lookahead stays opt-in.** It costs 2–2.5x CPU and the commit
+6. **160 ms lookahead stays opt-in.** It costs 2–2.5x CPU and the commit
    lag gain is under half a second. Document in the settings dialog when
    a low-latency mode is worth it.
-8. **sherpa-onnx as a second Engine** once its hotwords PR
+7. **sherpa-onnx as a second Engine** once its hotwords PR
    (k2-fsa/sherpa-onnx#3895) merges: model-side biasing for custom words
    would beat post-hoc Correction.
-9. **Moonshine v2** only if a faster x86 build appears; 2–4x slower and
+8. **Moonshine v2** only if a faster x86 build appears; 2–4x slower and
     less accurate on our samples (see `docs/research/engine-benchmark.md`).
-10. **Benchmark reference transcripts** in `target/bench/` were not
+9. **Benchmark reference transcripts** in `target/bench/` were not
     proofread; WER numbers in the benchmark report are approximate.
 
 ## Typing and hotkey
 
-11. **Per-character portal latency.** Each keysym is a D-Bus round trip.
+10. **Per-character portal latency.** Each keysym is a D-Bus round trip.
     If it shows in use, batch through libei or type words per call.
-12. **Chord keys pressed in the wrong order leak.** Pressing z before Alt
+11. **Chord keys pressed in the wrong order leak.** Pressing z before Alt
     types a z, because only modifier presses are deferred (ADR 0006).
-13. **Toggle mode has no UI.** `ptw toggle` over D-Bus works; nothing
+12. **Toggle mode has no UI.** `ptw toggle` over D-Bus works; nothing
     exposes it.
 
 ## Packaging
 
-14. **`.deb` package** so setup is `apt install` plus `ptw setup`. It
+13. **`.deb` package** so setup is `apt install` plus `ptw setup`. It
     could also ship the udev rule and a login hook, so joining `input`
     stops being a documented relogin step (`ptw doctor`'s `service` line
     and the daemon both explain it today).
-15. **Hotkey capture in the settings dialog.** Today you type the chord
+14. **Hotkey capture in the settings dialog.** Today you type the chord
     name and it is validated live.

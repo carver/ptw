@@ -10,6 +10,6 @@ Measured on the user's five recordings on this CPU (`docs/research/engine-benchm
 
 - Nemotron produces no Tentative text at all under greedy decoding; Committed words arrive every 560 ms. There is nothing to preview even if an overlay became possible.
 - The 160 ms Lookahead costs 2 to 2.5x the compute for 0.16 s less lag and no accuracy gain here. It stays a setting, not the default.
-- Thread count is a setting, default 2: on this box 8 threads was 1.7 to 1.9x slower than 2, likely P-core/E-core mixing. Re-measure on the host with pinning before changing the default.
+- Thread count is a setting, default 2. On the host (i7-1260P, 4 P + 8 E cores) throughput rises with threads, 5.6x real time at 2 to 7.4x at 8, so 8 saves 24 ms per 560 ms chunk against the 560 ms Lookahead, for four times the cores busy while dictating. 2 is the cheapest count that is comfortably real time. 0 lets transcribe.cpp take all 16 hardware threads and lands at 3.9x, slower than 2. The sandbox's "8 is slower than 2" was its CPU quota, not the chip.
 - Building needs cmake and a C++ toolchain; OpenBLAS is optional and made no measurable difference.
 - Custom words stay a Correction layer for now.

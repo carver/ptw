@@ -28,8 +28,10 @@ pub struct EngineConfig {
     pub model: String,
     /// Lookahead in milliseconds; which values exist depends on the Model.
     pub lookahead_ms: u32,
-    /// Threads for recognition. 2 measured fastest on an Alder Lake laptop
-    /// (ADR 0005); 0 lets the Engine decide.
+    /// Threads for recognition. 2 keeps up with speech five times over on
+    /// an Alder Lake laptop; 8 gains 24 ms per commit for four times the
+    /// cores (ADR 0005). 0 lets the Engine take every hardware thread,
+    /// which is slower than 2 on a hybrid CPU.
     pub threads: usize,
 }
 

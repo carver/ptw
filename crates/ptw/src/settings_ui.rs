@@ -208,7 +208,7 @@ impl App {
             ui.label("Threads");
             ui.horizontal(|ui| {
                 ui.add(egui::DragValue::new(&mut self.config.engine.threads).range(0..=64));
-                ui.weak("0 = automatic");
+                ui.weak("2 is plenty; 0 takes every core and is slower");
             });
             ui.end_row();
         });
