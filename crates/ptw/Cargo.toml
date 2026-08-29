@@ -23,3 +23,5 @@ cpal = "0.18"
 ksni = "0.3"
 zbus = { version = "5", features = ["tokio"] }
 hound = "3"
+eframe = { version = "0.36", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
+winit = { version = "0.30", default-features = false, features = ["wayland-csd-adwaita"] }

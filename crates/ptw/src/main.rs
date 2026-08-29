@@ -7,6 +7,7 @@ mod doctor;
 mod engines;
 mod hotkey_source;
 mod portal_typist;
+mod settings_ui;
 mod setup;
 mod transcribe;
 mod tray;
@@ -59,7 +60,7 @@ fn main() -> anyhow::Result<()> {
         Command::Daemon => daemon::run(&config_path),
         Command::Setup(args) => setup::run(&config_path, args),
         Command::Doctor => doctor::run(&config_path),
-        Command::Settings => setup::open_settings(&config_path),
+        Command::Settings => settings_ui::run(&config_path),
         Command::Toggle => dbus::toggle(),
         Command::Transcribe(args) => transcribe::run(&config_path, args),
     }
