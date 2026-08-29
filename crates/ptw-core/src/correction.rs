@@ -4,7 +4,10 @@
 //! Matching compares alphanumeric, lowercased keys with Levenshtein distance,
 //! boosted when Double Metaphone says the two sound alike (so "Kaitlin" finds
 //! "Caitlyn" even though the first letters differ). Runs of words are tried
-//! too, so "Chat G P T" can become "ChatGPT" when the list says so.
+//! too, so "Chat G P T" can become "ChatGPT" when the list says so. The
+//! Engine splits words it does not know ("Bernal" comes back as "burn
+//! all"), so a run may be one word longer than its entry, if it sounds
+//! the same.
 
 use rphonetic::{DoubleMetaphone, Encoder};
 
@@ -16,6 +19,8 @@ const ACCEPT_BELOW: f64 = 0.15;
 const PHONETIC_BOOST: f64 = 0.3;
 /// Keys shorter than this must match exactly; "cat" must not become "Kat".
 const MIN_FUZZY_LEN: usize = 4;
+/// How many more recognized words than its own an entry may cover.
+const SPLIT_ALLOWANCE: usize = 1;
 
 #[derive(Clone, Debug)]
 struct Entry {
@@ -132,9 +137,14 @@ impl CustomWords {
         self.entries.is_empty()
     }
 
-    /// The longest run of recognized words a Correction can cover. At least 1.
-    pub fn max_words(&self) -> usize {
-        self.max_words
+    /// The longest run of recognized words a Correction can cover, and so
+    /// the Hold-back. 1 when there is nothing to correct.
+    pub fn window(&self) -> usize {
+        if self.entries.is_empty() {
+            1
+        } else {
+            self.max_words + SPLIT_ALLOWANCE
+        }
     }
 
     /// The Custom words as written, in order.
@@ -143,16 +153,16 @@ impl CustomWords {
     }
 
     /// The best Correction starting at `words[0]`, looking at up to
-    /// [`max_words`](Self::max_words) of them. Among equal scores the
-    /// shortest run wins, so a word that is already right is never merged
-    /// with its neighbour.
+    /// [`window`](Self::window) of them. Among equal scores the shortest
+    /// run wins, so a word that is already right is never merged with its
+    /// neighbour.
     pub fn correct_at(&self, words: &[&str]) -> Option<Correction> {
         if self.entries.is_empty() || words.is_empty() {
             return None;
         }
         let tokens: Vec<Token<'_>> = words
             .iter()
-            .take(self.max_words)
+            .take(self.window())
             .map(|w| tokenize(w))
             .collect();
         let mut best: Option<(f64, Correction)> = None;
@@ -166,7 +176,7 @@ impl CustomWords {
                 continue;
             }
             for entry in &self.entries {
-                let Some(score) = self.score(&key, entry) else {
+                let Some(score) = self.score(&key, n + 1, entry) else {
                     continue;
                 };
                 if best.as_ref().is_none_or(|(s, _)| score < *s) {
@@ -184,7 +194,9 @@ impl CustomWords {
         best.map(|(_, c)| c)
     }
 
-    fn score(&self, candidate: &str, entry: &Entry) -> Option<f64> {
+    /// How far `candidate`, the key of a run of `run_words` recognized
+    /// words, is from `entry`; `None` when too far to be a Correction.
+    fn score(&self, candidate: &str, run_words: usize, entry: &Entry) -> Option<f64> {
         if candidate == entry.key {
             return Some(0.0);
         }
@@ -204,8 +216,11 @@ impl CustomWords {
         let sounds_alike = [&primary, &alternate]
             .iter()
             .any(|c| !c.is_empty() && (**c == entry.primary || **c == entry.alternate));
+        let split_further = run_words > entry.word_count;
         let score = if sounds_alike {
             lev * PHONETIC_BOOST
+        } else if split_further {
+            return None;
         } else {
             lev
         };
@@ -322,8 +337,9 @@ mod tests {
     #[test]
     fn split_terms_merge_when_the_entry_says_so() {
         let w = words(&["ChatGPT", "Jason Carver"]);
-        assert_eq!(w.max_words(), 2);
+        assert_eq!(w.window(), 3);
         assert_eq!(w.correct_all("ask chat g p t"), "ask chat g p t");
+        assert_eq!(w.correct_all("ask chat gpt"), "ask ChatGPT");
         let w3 = CustomWords::new(["Chat G P T"]);
         assert_eq!(w3.correct_all("ask chat g p t now"), "ask Chat G P T now");
         assert_eq!(w.correct_all("jason carver said"), "Jason Carver said");
@@ -334,6 +350,19 @@ mod tests {
     fn sharing_the_first_four_sounds_is_not_sounding_alike() {
         let w = words(&["Jason Carver"]);
         assert_eq!(w.correct_all("jason carlton said"), "jason carlton said");
+    }
+
+    #[test]
+    fn a_name_the_engine_split_is_merged_when_it_sounds_right() {
+        let w = words(&["Bernal Heights", "Caitlyn"]);
+        assert_eq!(w.window(), 3);
+        assert_eq!(
+            w.correct_all("possibly burn all heights onto Linux"),
+            "possibly Bernal Heights onto Linux"
+        );
+        assert_eq!(w.correct_all("kait lin came"), "Caitlyn came");
+        // One word too many that only looks close stays as heard.
+        assert_eq!(w.correct_all("burn all hopes"), "burn all hopes");
     }
 
     #[test]
@@ -353,7 +382,7 @@ mod tests {
     fn empty_list_never_corrects() {
         let w = CustomWords::default();
         assert!(w.is_empty());
-        assert_eq!(w.max_words(), 1);
+        assert_eq!(w.window(), 1);
         assert_eq!(w.correct_at(&["anything"]), None);
     }
 

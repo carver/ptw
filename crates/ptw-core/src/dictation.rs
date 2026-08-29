@@ -48,7 +48,7 @@ impl Dictation {
             );
             return String::new();
         }
-        let window = self.words.max_words();
+        let window = self.words.window();
         let mut out = String::new();
         while self.released < complete.len() {
             let decidable = flushing || self.released + window <= complete.len();
@@ -101,18 +101,25 @@ mod tests {
     #[test]
     fn holds_back_enough_words_for_multi_word_corrections() {
         let mut d = dictation(&["Jason Carver"]);
-        assert_eq!(d.update("I asked jason "), "I asked ");
-        assert_eq!(d.update("I asked jason carver "), "Jason Carver ");
-        assert_eq!(d.update("I asked jason carver about "), "");
+        assert_eq!(d.update("I asked jason "), "I ");
+        assert_eq!(d.update("I asked jason carver "), "asked ");
+        assert_eq!(d.update("I asked jason carver about "), "Jason Carver ");
         assert_eq!(d.finish("I asked jason carver about it"), "about it ");
     }
 
     #[test]
-    fn single_word_lists_release_each_word_as_the_next_begins() {
+    fn holds_back_one_extra_word_for_names_the_engine_splits() {
+        let mut d = dictation(&["Bernal Heights"]);
+        assert_eq!(d.update("possibly burn all "), "possibly ");
+        assert_eq!(d.update("possibly burn all heights "), "Bernal Heights ");
+    }
+
+    #[test]
+    fn single_word_lists_release_each_word_as_the_one_after_next_begins() {
         let mut d = dictation(&["Caitlyn"]);
-        assert_eq!(d.update("Kaitlin said"), "Caitlyn ");
-        assert_eq!(d.update("Kaitlin said hi"), "said ");
-        assert_eq!(d.finish("Kaitlin said hi"), "hi ");
+        assert_eq!(d.update("Kaitlin said"), "");
+        assert_eq!(d.update("Kaitlin said hi"), "Caitlyn ");
+        assert_eq!(d.finish("Kaitlin said hi"), "said hi ");
     }
 
     #[test]

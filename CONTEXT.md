@@ -49,7 +49,7 @@ Replacing recognized words that are a close match for a Custom word with that Cu
 _Avoid_: post-processing, fixup, substitution
 
 **Hold-back**:
-Committed words withheld from typing until enough following words have arrived to decide whether a Correction applies to them. Never longer than the longest Custom word.
+Committed words withheld from typing until enough following words have arrived to decide whether a Correction applies to them. One word longer than the longest Custom word, because the Engine splits words it does not know.
 _Avoid_: buffer, delay window
 
 **Key proxy**:
