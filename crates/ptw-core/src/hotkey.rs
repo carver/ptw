@@ -115,7 +115,7 @@ impl fmt::Display for Chord {
 }
 
 impl Chord {
-    fn is_member(&self, code: KeyCode) -> bool {
+    pub fn is_member(&self, code: KeyCode) -> bool {
         self.keys.iter().any(|k| k.matches(code))
     }
 
@@ -223,6 +223,11 @@ impl HotkeyMachine {
 
     pub fn is_holding(&self) -> bool {
         self.state == State::Holding
+    }
+
+    /// No chord key is doing anything: not holding, not latched.
+    pub fn is_idle(&self) -> bool {
+        self.state == State::Idle
     }
 
     /// Whether a modifier key is down. Text typed now would reach the

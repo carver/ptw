@@ -8,6 +8,7 @@ pub mod engine;
 pub mod hotkey;
 pub mod keys;
 pub mod layout;
+pub mod proxy;
 pub mod resample;
 pub mod session;
 pub mod typist;
