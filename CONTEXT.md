@@ -52,6 +52,14 @@ _Avoid_: post-processing, fixup, substitution
 Committed words withheld from typing until enough following words have arrived to decide whether a Correction applies to them. Never longer than the longest Custom word.
 _Avoid_: buffer, delay window
 
+**Key proxy**:
+ptw's stand-in for the keyboard: it takes every key from the real keyboards, keeps the Hotkey for itself, and passes the rest on to the desktop.
+_Avoid_: interceptor, remapper, grab (that is the mechanism)
+
+**Deferral**:
+The moment (up to 150 ms) the Key proxy waits after a Hotkey modifier press to see whether the rest of the Hotkey follows before the desktop is told about it.
+_Avoid_: hold-back (that is the Correction term), debounce, delay
+
 **Typist**:
 The part of ptw that delivers text to the focused application.
 _Avoid_: paster, injector, output, keyboard emulator

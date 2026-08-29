@@ -12,9 +12,12 @@ choices is in `docs/adr/`; the interview that started it is in
 
 ## How it works
 
-- The Hotkey (default `Alt+z`) is read straight from `/dev/input`, because
-  that is the only way to see a key *release* on GNOME 46 (ADR 0003). Any
-  other key pressed during a hold cancels the dictation.
+- The Hotkey (default `Alt+z`, in your keyboard layout) is read straight
+  from `/dev/input`, because that is the only way to see a key *release*
+  on GNOME 46 (ADR 0003). ptw grabs the keyboard and passes every other
+  key on through a virtual one, so the desktop never sees the chord and
+  text can stream while Alt is held (ADR 0006). Any other key pressed
+  during a hold cancels the dictation.
 - Audio goes to a streaming Engine on the CPU. Only text the Engine has
   committed gets typed; nothing typed is ever retracted (ADR 0002).
 - Typing goes through the XDG RemoteDesktop portal, which asks once and
@@ -61,7 +64,7 @@ ptw transcribe --realtime some.wav   # the daemon's text path, no microphone
 ```
 
 `crates/ptw-core` has no desktop dependencies and holds everything with
-interesting logic: hotkey chords, correction, hold-back, the dictation
-loop, the resampler. `crates/ptw` is the daemon, typists, tray, CLI and
+interesting logic: hotkey chords, the key proxy, correction, hold-back,
+the dictation loop, the resampler. `crates/ptw` is the daemon, typists, tray, CLI and
 settings dialog. Recordings for tuning live in `tests/data/` and stay
 out of git.

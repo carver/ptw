@@ -10,21 +10,13 @@ bottom of each section; delete an entry when it is done, git remembers.
    microphone capture and cues, portal typing, the tray icon, the settings
    dialog, the systemd unit. Each gets its first real test on the host.
    The tray in particular: ksni needs GNOME's AppIndicator extension.
-2. **Streaming needs a Hotkey the compositor does not see as a modifier.**
-   Text typed while Alt is held arrives as Alt+letter shortcuts (ADR
-   0003), so `Alt+z` now types at release, like Handy. To stream while
-   holding, pick one:
-   - grab the keyboard (EVIOCGRAB) and re-emit non-chord keys through
-     uinput; the chord never leaks, modifier chords need a short hold-back
-     of the modifier press until the next key decides; udev rule, proxy
-     risk;
-   - a toggle mode: tap the chord to start, tap to stop; tiny change, the
-     chord leaks on the tap;
-   - a lone non-modifier key held (Pause, ScrollLock, F13+); zero change,
-     scarce on laptops.
-3. **`ptw setup` does not install a udev rule for `/dev/uinput`.** The
-   uinput typist is the fallback when the portal misbehaves; today it
-   needs root or a hand-written rule.
+2. **The Key proxy has not run on a real keyboard.** ADR 0006. Things
+   to watch for: keys stuck down after start or quit, the Deferral
+   biting Alt+click, autorepeat behaviour of forwarded keys, a second
+   keyboard plugged in while running, and whether `ptw setup`'s udev rule
+   takes effect without a relogin.
+3. **Deferral is a constant (150 ms).** Make it a config knob if anyone
+   needs a different trade-off between Alt+click and slow chord presses.
 4. **Thread count on the host.** In the sandbox 2 threads beat 8 by
    1.7–1.9x, which is surprising enough to re-measure with real use.
    Default stays 2 until then.
@@ -58,8 +50,8 @@ bottom of each section; delete an entry when it is done, git remembers.
 
 12. **Per-character portal latency.** Each keysym is a D-Bus round trip.
     If it shows in use, batch through libei or type words per call.
-13. **Alt+z leaks to the focused app** (ADR 0003). If it annoys, the
-    grab-and-reemit key proxy is the fix.
+13. **Chord keys pressed in the wrong order leak.** Pressing z before Alt
+    types a z, because only modifier presses are deferred (ADR 0006).
 14. **Toggle mode has no UI.** `ptw toggle` over D-Bus works; nothing
     exposes it. See 2.
 
