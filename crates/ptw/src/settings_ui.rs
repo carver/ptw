@@ -162,13 +162,17 @@ impl App {
         );
         ui.add(
             egui::TextEdit::multiline(&mut self.custom_words_text)
-                .desired_rows(8)
+                .desired_rows(6)
                 .desired_width(f32::INFINITY),
         );
     }
 
     fn engine_section(&mut self, ui: &mut egui::Ui) {
-        section(ui, "Engine", "Changes here need a daemon restart.");
+        section(
+            ui,
+            "Engine",
+            "Changes here need a daemon restart. A shorter lookahead types sooner; a longer one is more accurate.",
+        );
         grid(ui, "engine", |ui| {
             ui.label("Engine");
             egui::ComboBox::from_id_salt("engine")
@@ -188,20 +192,17 @@ impl App {
             ui.end_row();
 
             ui.label("Lookahead");
-            ui.horizontal(|ui| {
-                egui::ComboBox::from_id_salt("lookahead")
-                    .selected_text(format!("{} ms", self.config.engine.lookahead_ms))
-                    .show_ui(ui, |ui| {
-                        for ms in LOOKAHEADS_MS {
-                            ui.selectable_value(
-                                &mut self.config.engine.lookahead_ms,
-                                ms,
-                                format!("{ms} ms"),
-                            );
-                        }
-                    });
-                ui.weak("shorter types sooner, longer is more accurate");
-            });
+            egui::ComboBox::from_id_salt("lookahead")
+                .selected_text(format!("{} ms", self.config.engine.lookahead_ms))
+                .show_ui(ui, |ui| {
+                    for ms in LOOKAHEADS_MS {
+                        ui.selectable_value(
+                            &mut self.config.engine.lookahead_ms,
+                            ms,
+                            format!("{ms} ms"),
+                        );
+                    }
+                });
             ui.end_row();
 
             ui.label("Threads");
@@ -291,7 +292,7 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
     let app = App::new(config_path.to_path_buf())?;
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([560.0, 720.0])
+            .with_inner_size([600.0, 840.0])
             .with_min_inner_size([420.0, 400.0])
             .with_title("ptw settings"),
         ..Default::default()
