@@ -21,7 +21,7 @@ Record of the design interview that started the project (2026-08-28). Research b
 | Hotkey | Hold only in v1; `ptw toggle` verb shipped for a gsettings shortcut, no UI for it. On release: stop capture, Flush, idle. Mechanism: evdev (ADR 0003). Default Alt+z (harmless in shells and browsers; VS Code binds it to word wrap, which the user does not use). Any other key pressed during a Hold aborts the Dictation, so a lone modifier can be chosen as the Hotkey without chords triggering it. |
 | Typist | RemoteDesktop portal, uinput behind a setting (ADR 0004). Trailing space after each Dictation; Model's own punctuation; no filler removal. |
 | Custom words | Word list in the UI. Correction by fuzzy n-gram match (Handy style) with a Hold-back; Engine-level biasing added when the Engine offers it. |
-| Engine | Behind a trait. Primary chosen by a benchmark of Nemotron via sherpa-onnx, Nemotron via transcribe-cpp, and Moonshine v2 on this CPU. Default Lookahead 560 ms with 160 ms as the fast setting, subject to the benchmark. |
+| Engine | Behind a trait. Nemotron Speech Streaming EN 0.6B Q8_0 on transcribe.cpp, 560 ms Lookahead, 2 threads (ADR 0005, from `docs/research/engine-benchmark.md`). 160 ms stays a setting. Moonshine dropped; sherpa-onnx waits for its hotwords PR. |
 | Models | Downloaded by `ptw setup` with checksum into `~/.local/share/ptw/models/`; daemon refuses to start without one. |
 | Daemon | Resident, Model preloaded, ~0% idle CPU, systemd user service. One process: hotkey listener, audio capture, Engine, Typist, tray, D-Bus. |
 | Feedback | Tray icon state plus quiet audio cues on start/stop (on by default). Live-text notification banner as an off-by-default setting. No overlay on GNOME. |
@@ -32,4 +32,4 @@ Record of the design interview that started the project (2026-08-28). Research b
 
 ## Open
 
-- Which Engine and runtime: pending the benchmark (`docs/research/engine-benchmark.md`). The user agreed that building starts without another check-in if the benchmark makes the choice obvious.
+- Nothing from the interview. Next: run it on the host and tune thresholds and thread count with real use.
