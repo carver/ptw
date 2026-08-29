@@ -28,15 +28,19 @@ choices is in `docs/adr/`; the interview that started it is in
 ## Build
 
 ```sh
-sudo apt install build-essential pkg-config libasound2-dev
+sudo apt install build-essential cmake pkg-config libasound2-dev
 cargo install --path crates/ptw
 ```
+
+The Engine is Nemotron Speech Streaming EN 0.6B on transcribe.cpp (ADR
+0005): about 1 GB of RAM, 0.3x real time on two threads of an Alder Lake
+laptop, a word committed roughly half a second after you say it.
 
 ## Set up
 
 ```sh
 sudo usermod -aG input $USER   # read keyboards; log out and back in
-ptw setup                       # config, models, systemd user unit
+ptw setup                       # config, 700 MB model, systemd user unit
 systemctl --user enable --now ptw
 ptw doctor                      # what works, what does not
 ```
