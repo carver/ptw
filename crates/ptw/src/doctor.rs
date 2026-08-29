@@ -82,6 +82,22 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         );
     }
 
+    if let Some(groups) = service_groups() {
+        let has_input = groups.iter().any(|g| g == "input");
+        line(
+            has_input,
+            "service",
+            if has_input {
+                "systemd user services have the `input` group".to_string()
+            } else {
+                format!(
+                    "systemd user services lack the `input` group (they have: {}); log out and back in so `systemctl --user start ptw` can read the keyboard",
+                    groups.join(" ")
+                )
+            },
+        );
+    }
+
     let inputs = audio::list_inputs();
     line(
         !inputs.is_empty(),
@@ -163,4 +179,28 @@ pub fn foreign_primary_group() -> Option<String> {
     let passwd = String::from_utf8_lossy(&passwd.stdout);
     let login_gid = passwd.trim().split(':').nth(3)?;
     (gid != login_gid).then(|| id("-gn").unwrap_or(gid))
+}
+
+/// The groups a systemd user service runs with: those of the user manager,
+/// fixed at login, not those of the calling shell.
+fn service_groups() -> Option<Vec<String>> {
+    let out = Command::new("systemd-run")
+        .args([
+            "--user",
+            "--quiet",
+            "--wait",
+            "--pipe",
+            "--collect",
+            "id",
+            "-nG",
+        ])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())?;
+    Some(
+        String::from_utf8_lossy(&out.stdout)
+            .split_whitespace()
+            .map(String::from)
+            .collect(),
+    )
 }

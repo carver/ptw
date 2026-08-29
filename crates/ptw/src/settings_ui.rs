@@ -292,8 +292,8 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
     let app = App::new(config_path.to_path_buf())?;
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([600.0, 840.0])
-            .with_min_inner_size([420.0, 400.0])
+            .with_inner_size([760.0, 940.0])
+            .with_min_inner_size([480.0, 400.0])
             .with_title("ptw settings"),
         ..Default::default()
     };

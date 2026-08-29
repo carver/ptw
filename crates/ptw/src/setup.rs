@@ -205,11 +205,13 @@ fn download_default_model(dry_run: bool) -> anyhow::Result<()> {
 /// the daemon down.
 pub fn open_settings(config_path: &Path) -> anyhow::Result<()> {
     let exe = std::env::current_exe()?;
-    Command::new(exe)
+    let mut child = Command::new(exe)
         .arg("--config")
         .arg(config_path)
         .arg("settings")
         .spawn()
         .context("spawn settings")?;
+    // Reap it, or it lingers as a zombie once closed.
+    std::thread::spawn(move || child.wait());
     Ok(())
 }

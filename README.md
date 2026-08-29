@@ -42,8 +42,9 @@ laptop, a word committed roughly half a second after you say it.
 ## Set up
 
 ```sh
-sudo usermod -aG input $USER   # read keyboards; log out and back in
-ptw setup                       # config, 700 MB model, systemd user unit
+sudo usermod -aG input $USER   # read keyboards; then log out and back in:
+                                # systemd user services only get login-time groups
+ptw setup                       # config, 700 MB model, udev rule, systemd unit
 systemctl --user enable --now ptw
 ptw doctor                      # what works, what does not
 ```

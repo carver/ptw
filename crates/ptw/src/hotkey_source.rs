@@ -127,6 +127,11 @@ impl HotkeySource {
         });
         let open: Arc<Mutex<HashSet<PathBuf>>> = Arc::default();
         scan(&shared, &open);
+        if open.lock().unwrap().is_empty() {
+            warn!(
+                "no readable keyboard under /dev/input: the Hotkey cannot work. Not in the `input` group? A systemd user service only has the groups you had at login, so joining a group needs a logout"
+            );
+        }
         let rescan = Arc::clone(&shared);
         thread::Builder::new()
             .name("ptw-hotkey-rescan".into())

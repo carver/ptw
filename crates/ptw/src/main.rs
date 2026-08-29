@@ -50,10 +50,12 @@ enum Command {
 
 fn main() -> anyhow::Result<()> {
     // Portal Request and Session objects have no properties, and zbus warns
-    // on every one it fails to cache. Mute it at any RUST_LOG level.
+    // on every one it fails to cache; sctk_adwaita warns about GNOME
+    // titlebar buttons it does not draw. Mute both at any RUST_LOG level.
     let filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| "info".into())
-        .add_directive("zbus::proxy=error".parse().expect("valid directive"));
+        .add_directive("zbus::proxy=error".parse().expect("valid directive"))
+        .add_directive("sctk_adwaita=error".parse().expect("valid directive"));
     tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_writer(std::io::stderr)
