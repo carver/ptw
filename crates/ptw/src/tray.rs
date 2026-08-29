@@ -1,4 +1,6 @@
-//! The tray icon: a microphone when idle, a red dot while a Dictation runs.
+//! The tray icon: the theme's microphone when idle, a solid red disc
+//! while a Dictation runs. Hosts prefer an icon name over a pixmap, so
+//! the active state gives no name at all.
 
 use std::sync::mpsc::Sender;
 
@@ -23,7 +25,7 @@ impl Tray for PtwTray {
 
     fn icon_name(&self) -> String {
         if self.active {
-            "media-record-symbolic".into()
+            String::new()
         } else {
             "audio-input-microphone-symbolic".into()
         }
@@ -31,7 +33,13 @@ impl Tray for PtwTray {
 
     fn icon_pixmap(&self) -> Vec<Icon> {
         if self.active {
-            vec![red_dot(22), red_dot(32)]
+            vec![
+                red_disc(16),
+                red_disc(22),
+                red_disc(24),
+                red_disc(32),
+                red_disc(48),
+            ]
         } else {
             Vec::new()
         }
@@ -74,10 +82,11 @@ impl Tray for PtwTray {
     }
 }
 
-fn red_dot(size: i32) -> Icon {
+/// ARGB32, as the StatusNotifierItem spec wants.
+fn red_disc(size: i32) -> Icon {
     let mut data = Vec::with_capacity((size * size * 4) as usize);
     let center = (size as f32 - 1.0) / 2.0;
-    let radius = size as f32 * 0.38;
+    let radius = size as f32 * 0.46;
     for y in 0..size {
         for x in 0..size {
             let d = ((x as f32 - center).powi(2) + (y as f32 - center).powi(2)).sqrt();
