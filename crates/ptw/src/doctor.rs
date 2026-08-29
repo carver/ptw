@@ -1,6 +1,7 @@
 //! `ptw doctor`: what works on this machine, one line per check.
 
 use std::path::Path;
+use std::process::Command;
 
 use ptw_core::config::Config;
 
@@ -78,6 +79,17 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         },
     );
 
+    match foreign_primary_group() {
+        None => line(true, "group", "primary group is your login group"),
+        Some(group) => line(
+            false,
+            "group",
+            format!(
+                "primary group is `{group}`, not your login group: this shell came from `newgrp`/`sg`, and the portal refuses such callers. Log out and back in instead."
+            ),
+        ),
+    }
+
     let runtime = tokio::runtime::Runtime::new()?;
     match runtime.block_on(portal_typist::probe()) {
         Ok(detail) => line(true, "portal", detail),
@@ -105,4 +117,30 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         },
     );
     Ok(())
+}
+
+/// The name of the process's primary group when it differs from the login
+/// group in passwd, as after `newgrp input` or `sg input`.
+///
+/// xdg-desktop-portal identifies a caller by opening `/proc/<pid>/root`,
+/// which the kernel allows only when uid and gid both match the portal's
+/// own. A `newgrp` shell fails that check with "Unable to open /proc/<pid>/root".
+pub fn foreign_primary_group() -> Option<String> {
+    let id = |flag: &str| {
+        Command::new("id")
+            .arg(flag)
+            .output()
+            .ok()
+            .filter(|o| o.status.success())
+            .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+    };
+    let uid = id("-u")?;
+    let gid = id("-g")?;
+    let passwd = Command::new("getent")
+        .args(["passwd", &uid])
+        .output()
+        .ok()?;
+    let passwd = String::from_utf8_lossy(&passwd.stdout);
+    let login_gid = passwd.trim().split(':').nth(3)?;
+    (gid != login_gid).then(|| id("-gn").unwrap_or(gid))
 }

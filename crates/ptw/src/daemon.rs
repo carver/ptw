@@ -58,9 +58,18 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
     let engine = engines::build(&config.engine)?;
     info!(engine = engine.name(), "engine loaded");
     let typist: Box<dyn Typist> = match config.typist.backend {
-        TypistBackend::Portal => Box::new(runtime.block_on(
-            portal_typist::PortalTypist::connect(runtime.handle().clone()),
-        )?),
+        TypistBackend::Portal => Box::new(
+            runtime
+                .block_on(portal_typist::PortalTypist::connect(
+                    runtime.handle().clone(),
+                ))
+                .with_context(|| match crate::doctor::foreign_primary_group() {
+                    Some(group) => format!(
+                        "open the portal keyboard session (this shell's primary group is `{group}`, so it came from `newgrp`/`sg`; the portal refuses such callers. Log out and back in instead)"
+                    ),
+                    None => "open the portal keyboard session".to_string(),
+                })?,
+        ),
         TypistBackend::Uinput => Box::new(
             crate::uinput_typist::UinputTypist::open()
                 .context("open /dev/uinput; run `ptw setup`")?,
