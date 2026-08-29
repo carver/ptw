@@ -32,4 +32,4 @@ Record of the design interview that started the project (2026-08-28). Research b
 
 ## Open
 
-- Nothing from the interview. Next: run it on the host and tune thresholds and thread count with real use.
+- Nothing from the interview. Open work lives in `docs/issues.md`.
