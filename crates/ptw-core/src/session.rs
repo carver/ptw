@@ -11,7 +11,7 @@ use tracing::{debug, warn};
 use crate::correction::CustomWords;
 use crate::dictation::Dictation;
 use crate::engine::{Engine, EngineError, EngineStream};
-use crate::typist::Typist;
+use crate::typist::{Typist, TypistError};
 
 /// What the audio thread sends: samples at [`crate::engine::SAMPLE_RATE`],
 /// or a control message.
@@ -71,7 +71,7 @@ impl Gate {
             return;
         }
         let text = std::mem::take(&mut self.pending);
-        match typist.type_text(&text) {
+        match type_with_reconnect(typist, &text) {
             Ok(()) => {
                 debug!(text, "typed");
                 outcome.typed.push_str(&text);
@@ -79,6 +79,21 @@ impl Gate {
             Err(e) => warn!(error = %e, text, "typing failed; text dropped"),
         }
     }
+}
+
+/// A typing failure usually means the route to the desktop died while ptw
+/// was idle (suspend kills the portal session), so reconnect and retype
+/// the chunk once before giving it up.
+fn type_with_reconnect(typist: &mut dyn Typist, text: &str) -> Result<(), TypistError> {
+    let Err(first) = typist.type_text(text) else {
+        return Ok(());
+    };
+    warn!(error = %first, "typing failed; reconnecting the Typist");
+    if let Err(e) = typist.reconnect() {
+        warn!(error = %e, "Typist reconnect failed");
+        return Err(first);
+    }
+    typist.type_text(text)
 }
 
 /// Feeds audio from `input` into a fresh stream of `engine` and types what
@@ -240,6 +255,66 @@ mod tests {
         assert_eq!(typist.text(), "");
         assert_eq!(outcome.typed, "");
         assert_eq!(outcome.dropped, "one two ");
+    }
+
+    /// Fails every keystroke until reconnected, like a portal session
+    /// that suspend killed.
+    #[derive(Default)]
+    struct DeadSessionTypist {
+        broken: bool,
+        reconnects: usize,
+        inner: RecordingTypist,
+    }
+
+    impl Typist for DeadSessionTypist {
+        fn type_text(&mut self, text: &str) -> Result<(), TypistError> {
+            if self.broken {
+                return Err(TypistError::Backend("Invalid session".into()));
+            }
+            self.inner.type_text(text)
+        }
+
+        fn reconnect(&mut self) -> Result<(), TypistError> {
+            self.reconnects += 1;
+            self.broken = false;
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn reconnects_and_retypes_when_typing_fails() {
+        let engine = ScriptedEngine::word_by_word("back from suspend");
+        let (tx, rx) = mpsc::channel();
+        let mut typist = DeadSessionTypist {
+            broken: true,
+            ..Default::default()
+        };
+        tx.send(Input::Audio(vec![0.0; 1280])).unwrap();
+        tx.send(Input::Stop).unwrap();
+        let outcome = run(&engine, &CustomWords::default(), &rx, &mut typist).unwrap();
+        assert_eq!(typist.inner.text(), "back from suspend ");
+        assert_eq!(typist.reconnects, 1);
+        assert_eq!(outcome.typed, "back from suspend ");
+    }
+
+    /// A Typist without a reconnect path (the trait default) keeps
+    /// today's behavior: warn and drop.
+    struct BrokenTypist;
+
+    impl Typist for BrokenTypist {
+        fn type_text(&mut self, _text: &str) -> Result<(), TypistError> {
+            Err(TypistError::Backend("no route to desktop".into()))
+        }
+    }
+
+    #[test]
+    fn drops_text_when_reconnect_is_not_supported() {
+        let engine = ScriptedEngine::word_by_word("lost words");
+        let (tx, rx) = mpsc::channel();
+        tx.send(Input::Audio(vec![0.0; 1280])).unwrap();
+        tx.send(Input::Stop).unwrap();
+        let outcome = run(&engine, &CustomWords::default(), &rx, &mut BrokenTypist).unwrap();
+        assert_eq!(outcome.typed, "");
     }
 
     #[test]

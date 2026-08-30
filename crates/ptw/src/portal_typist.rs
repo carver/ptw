@@ -109,6 +109,17 @@ impl Typist for PortalTypist {
             .block_on(self.type_async(text))
             .map_err(|e| TypistError::Backend(e.to_string()))
     }
+
+    /// Opens a fresh portal session; the saved restore token keeps the
+    /// dialog away. The dead session needs no goodbye.
+    fn reconnect(&mut self) -> Result<(), TypistError> {
+        let runtime = self.runtime.clone();
+        *self = self
+            .runtime
+            .block_on(Self::connect(runtime))
+            .map_err(|e| TypistError::Backend(format!("{e:#}")))?;
+        Ok(())
+    }
 }
 
 /// Whether the portal can be reached at all, for `ptw doctor`.

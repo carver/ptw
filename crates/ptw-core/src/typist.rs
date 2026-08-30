@@ -9,6 +9,13 @@ pub enum TypistError {
 pub trait Typist: Send {
     /// Types `text` after whatever was typed before. Never deletes.
     fn type_text(&mut self, text: &str) -> Result<(), TypistError>;
+
+    /// Re-establishes the route to the desktop after a typing failure
+    /// (suspend kills the portal session, for one). Backends with
+    /// nothing to re-establish keep this default.
+    fn reconnect(&mut self) -> Result<(), TypistError> {
+        Err(TypistError::Backend("this Typist cannot reconnect".into()))
+    }
 }
 
 /// Collects typed text in memory, for tests and `ptw doctor`.
