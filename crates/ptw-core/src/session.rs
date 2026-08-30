@@ -39,7 +39,8 @@ const RELEASE_GRACE: Duration = Duration::from_secs(5);
 pub struct Outcome {
     /// Everything typed, including the trailing space.
     pub typed: String,
-    /// Text that was ready but never typed because modifiers stayed down.
+    /// Text that was ready but never typed: modifiers stayed down, or
+    /// typing failed and reconnecting did not help.
     pub dropped: String,
     pub aborted: bool,
 }
@@ -76,7 +77,10 @@ impl Gate {
                 debug!(text, "typed");
                 outcome.typed.push_str(&text);
             }
-            Err(e) => warn!(error = %e, text, "typing failed; text dropped"),
+            Err(e) => {
+                warn!(error = %e, text, "typing failed; text dropped");
+                outcome.dropped.push_str(&text);
+            }
         }
     }
 }
@@ -173,11 +177,12 @@ fn wait_for_modifiers(
         }
     }
     if !gate.pending.is_empty() {
-        outcome.dropped = std::mem::take(&mut gate.pending);
+        let pending = std::mem::take(&mut gate.pending);
         warn!(
-            text = outcome.dropped,
+            text = pending,
             "modifier keys still held; text dropped rather than typed as shortcuts"
         );
+        outcome.dropped.push_str(&pending);
     }
 }
 
@@ -315,6 +320,7 @@ mod tests {
         tx.send(Input::Stop).unwrap();
         let outcome = run(&engine, &CustomWords::default(), &rx, &mut BrokenTypist).unwrap();
         assert_eq!(outcome.typed, "");
+        assert_eq!(outcome.dropped, "lost words ");
     }
 
     #[test]

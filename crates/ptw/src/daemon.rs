@@ -199,6 +199,7 @@ impl Daemon {
                 match session::run(&*engine, &words, &rx, &mut **typist) {
                     Ok(outcome) => info!(
                         typed = outcome.typed,
+                        dropped = outcome.dropped,
                         aborted = outcome.aborted,
                         "dictation done"
                     ),
