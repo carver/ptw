@@ -3,24 +3,33 @@
 //!
 //! Matching compares alphanumeric, lowercased keys with Levenshtein distance,
 //! boosted when Double Metaphone says the two sound alike (so "Kaitlin" finds
-//! "Caitlyn" even though the first letters differ). Runs of words are tried
-//! too, so "Chat G P T" can become "ChatGPT" when the list says so. The
-//! Engine splits words it does not know ("Bernal" comes back as "burn
-//! all"), so when the list has phrases a run may be one word longer than
-//! its entry, if it sounds the same. A list of single words does not pay
-//! the extra Hold-back for that.
+//! "Caitlyn" even though the first letters differ). When the CMU dictionary
+//! ([`crate::pronounce`]) knows both sides it overrules Metaphone, which
+//! drops vowels: "clawed" is "Claude" but "cloud" is not, all KLT to
+//! Metaphone. Runs of words are tried too, so "Chat G P T" can become
+//! "ChatGPT" when the list says so. The Engine splits words it does not
+//! know ("Bernal" comes back as "burn all"), so when the list has phrases
+//! a run may be one word longer than its entry, if it sounds the same;
+//! the dictionary gets no say over a split run, because the filler words'
+//! vowels are the Engine's approximation, not the speaker's. A list of
+//! single words does not pay the extra Hold-back for that.
 
+use crate::pronounce::{self, Pronunciation};
 use rphonetic::{DoubleMetaphone, Encoder};
 
 /// Scores below this are accepted. 0 is an exact match. Without phonetic
 /// agreement this allows one edit in seven letters; "career" stays "career"
 /// next to "Carver".
 const ACCEPT_BELOW: f64 = 0.15;
-/// Levenshtein score multiplier when the phonetic codes agree. Homophones
-/// can disagree on half their letters ("clawed" is three edits from
-/// "Claude"), so sounding alike must carry a run up to that; "called" and
-/// "cold", four edits out, stay put.
-const PHONETIC_BOOST: f64 = 0.25;
+/// Levenshtein score multiplier when the Metaphone codes agree and the
+/// dictionary has no verdict.
+const PHONETIC_BOOST: f64 = 0.3;
+/// Levenshtein score multiplier for dictionary homophones. Spelling barely
+/// matters then: "colonel" is four edits from "kernel" and still the word.
+const HOMOPHONE_BOOST: f64 = 0.05;
+/// Give up on pronouncing a run with more ways to say it than this and
+/// fall back to Metaphone.
+const PRONUNCIATION_CAP: usize = 32;
 /// Keys shorter than this must match exactly; "cat" must not become "Kat".
 const MIN_FUZZY_LEN: usize = 4;
 /// How many more recognized words than its own an entry may cover, once
@@ -34,6 +43,7 @@ struct Entry {
     word_count: usize,
     primary: String,
     alternate: String,
+    pronunciations: Option<Vec<Pronunciation>>,
 }
 
 /// The user's Custom words, prepared for matching.
@@ -98,6 +108,38 @@ fn key_of(text: &str) -> String {
         .collect()
 }
 
+/// Every way to say `alts` followed by `word`; `None` when the dictionary
+/// does not know `word` or the combinations pass [`PRONUNCIATION_CAP`].
+fn extend_pronunciations(alts: Vec<Pronunciation>, word: &str) -> Option<Vec<Pronunciation>> {
+    let next = pronounce::pronunciations(&word.to_lowercase())?;
+    let combined: Vec<Pronunciation> = alts
+        .iter()
+        .flat_map(|said| {
+            next.iter().map(|more| {
+                let mut joined = said.clone();
+                joined.extend(more);
+                joined
+            })
+        })
+        .take(PRONUNCIATION_CAP + 1)
+        .collect();
+    (combined.len() <= PRONUNCIATION_CAP).then_some(combined)
+}
+
+/// Every way to say a whole Custom word entry, when the dictionary knows
+/// each of its words.
+fn phrase_pronunciations(text: &str) -> Option<Vec<Pronunciation>> {
+    let mut alts = vec![Pronunciation::new()];
+    for word in text.split_whitespace() {
+        let core = tokenize(word).core;
+        if core.is_empty() {
+            continue;
+        }
+        alts = extend_pronunciations(alts, core)?;
+    }
+    Some(alts)
+}
+
 impl CustomWords {
     pub fn new<I, S>(words: I) -> Self
     where
@@ -120,6 +162,7 @@ impl CustomWords {
                     primary: metaphone.encode(&key),
                     alternate: metaphone.encode_alternate(&key),
                     word_count: text.split_whitespace().count(),
+                    pronunciations: phrase_pronunciations(&text),
                     key,
                     text,
                 })
@@ -173,16 +216,20 @@ impl CustomWords {
             .collect();
         let mut best: Option<(f64, Correction)> = None;
         let mut key = String::new();
+        let mut spoken: Option<Vec<Pronunciation>> = Some(vec![Pronunciation::new()]);
         for (n, token) in tokens.iter().enumerate() {
             if n > 0 && !tokens[n - 1].trailing.is_empty() {
                 break;
             }
             key.push_str(&key_of(token.core));
+            if !token.core.is_empty() {
+                spoken = spoken.and_then(|alts| extend_pronunciations(alts, token.core));
+            }
             if key.is_empty() {
                 continue;
             }
             for entry in &self.entries {
-                let Some(score) = self.score(&key, n + 1, entry) else {
+                let Some(score) = self.score(&key, spoken.as_deref(), n + 1, entry) else {
                     continue;
                 };
                 if best.as_ref().is_none_or(|(s, _)| score < *s) {
@@ -201,8 +248,15 @@ impl CustomWords {
     }
 
     /// How far `candidate`, the key of a run of `run_words` recognized
-    /// words, is from `entry`; `None` when too far to be a Correction.
-    fn score(&self, candidate: &str, run_words: usize, entry: &Entry) -> Option<f64> {
+    /// words said as one of `spoken`, is from `entry`; `None` when too
+    /// far to be a Correction.
+    fn score(
+        &self,
+        candidate: &str,
+        spoken: Option<&[Pronunciation]>,
+        run_words: usize,
+        entry: &Entry,
+    ) -> Option<f64> {
         if candidate == entry.key {
             return Some(0.0);
         }
@@ -217,12 +271,25 @@ impl CustomWords {
             return None;
         }
         let lev = strsim::levenshtein(candidate, &entry.key) as f64 / max_len;
+        let split_further = run_words > entry.word_count;
+        if let (Some(spoken), Some(listed)) = (spoken, entry.pronunciations.as_deref()) {
+            if spoken.iter().any(|way| listed.contains(way)) {
+                return Some(lev * HOMOPHONE_BOOST);
+            }
+            // The dictionary knows both sides and says they differ. In an
+            // unsplit run the Engine wrote a different real word on
+            // purpose; only near-identical spelling may still correct.
+            if !split_further {
+                return (lev < ACCEPT_BELOW).then_some(lev);
+            }
+            // A split run stands in for a word the Engine does not know,
+            // so its vowels prove nothing; let Metaphone judge.
+        }
         let primary = self.metaphone.encode(candidate);
         let alternate = self.metaphone.encode_alternate(candidate);
         let sounds_alike = [&primary, &alternate]
             .iter()
             .any(|c| !c.is_empty() && (**c == entry.primary || **c == entry.alternate));
-        let split_further = run_words > entry.word_count;
         let score = if sounds_alike {
             lev * PHONETIC_BOOST
         } else if split_further {
@@ -356,17 +423,33 @@ mod tests {
     }
 
     #[test]
-    fn homophones_with_half_their_letters_changed_are_corrected() {
+    fn dictionary_homophones_are_corrected() {
         let w = words(&["Claude"]);
         assert_eq!(
             w.correct_all("I asked clawed about it"),
             "I asked Claude about it"
         );
-        assert_eq!(w.correct_all("ask cloud something"), "ask Claude something");
-        // Same phonetic code but too many letters apart stays as heard.
-        for text in ["he called me", "a cold day", "the light glowed"] {
+        // Four letters apart, but the dictionary says they sound the same.
+        let k = words(&["kernel"]);
+        assert_eq!(w.correct_all("the colonel said"), "the colonel said");
+        assert_eq!(k.correct_all("the colonel said"), "the kernel said");
+    }
+
+    #[test]
+    fn words_the_dictionary_says_sound_different_stay_put() {
+        let w = words(&["Claude"]);
+        for text in [
+            "ask cloud something",
+            "he has clout",
+            "he called me",
+            "a cold day",
+        ] {
             assert_eq!(w.correct_all(text), text);
         }
+        // "clod" is not in the dictionary; it survives on the Metaphone
+        // path, where three edits in six letters sits exactly on
+        // ACCEPT_BELOW and is rejected.
+        assert_eq!(w.correct_all("a clod of dirt"), "a clod of dirt");
     }
 
     #[test]
