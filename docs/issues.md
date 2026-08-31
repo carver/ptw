@@ -21,25 +21,13 @@ Next ID: 15
 ## Correction and hold-back
 
 3. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the
-   ×0.25 phonetic boost were tuned to fix "career"→"Carver" and
-   "clawed"→"Claude", each on one sample. Revisit with a week of real
-   dictation; keep a list of misfires. Known so far: "cloud", "clod" and
-   "clout" all become "Claude" (see 14).
+   ×0.3 phonetic boost were tuned to fix "career"→"Carver" on one
+   sample; CMUdict homophones ("clawed"→"Claude") no longer lean on the
+   boost. Revisit with a week of real dictation; keep a list of
+   misfires. Words the dictionary lacks ("clod") still ride the
+   Metaphone knife edge at exactly 0.15.
 4. **Names still wrong on the samples:** a neighbourhood (sometimes),
    a first name, "ptw".
-14. **Metaphone cannot tell "clawed" from "cloud"; a pronouncing
-    dictionary can.** Double Metaphone drops vowels, so both are KLT and
-    the accept threshold has to pick which false result to live with
-    (today: "cloud"→"Claude"). CMUdict keeps them apart: "clawed" and
-    "claude" are both `K L AO D`, "cloud" is `K L AW D`. Layer it over
-    the scorer: both keys in the dictionary and phonemes equal (stress
-    ignored) is a homophone, accept; both in but unequal, drop the
-    phonetic boost and let plain Levenshtein decide (rejects "cloud" at
-    0.33); either out — names usually are — falls back to Metaphone as
-    today. Multi-word runs concatenate per-word phonemes when every word
-    is in. `cmudict-fast` on crates.io; a few MB of data, no desktop
-    deps, testable in the sandbox. Smaller than and independent of
-    model-side biasing (6), which is still the better endpoint.
 
 ## Engine
 
