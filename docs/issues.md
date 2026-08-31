@@ -6,7 +6,7 @@ permanent: a new entry takes the Next ID below (bump it) and goes at the
 bottom of its section. Delete an entry when it is done, git remembers;
 leave the gap, never renumber.
 
-Next ID: 14
+Next ID: 15
 
 ## Host bring-up
 
@@ -21,10 +21,25 @@ Next ID: 14
 ## Correction and hold-back
 
 3. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the
-   ×0.3 phonetic boost were tuned to fix "career"→"Carver" on one sample.
-   Revisit with a week of real dictation; keep a list of misfires.
+   ×0.25 phonetic boost were tuned to fix "career"→"Carver" and
+   "clawed"→"Claude", each on one sample. Revisit with a week of real
+   dictation; keep a list of misfires. Known so far: "cloud", "clod" and
+   "clout" all become "Claude" (see 14).
 4. **Names still wrong on the samples:** a neighbourhood (sometimes),
    a first name, "ptw".
+14. **Metaphone cannot tell "clawed" from "cloud"; a pronouncing
+    dictionary can.** Double Metaphone drops vowels, so both are KLT and
+    the accept threshold has to pick which false result to live with
+    (today: "cloud"→"Claude"). CMUdict keeps them apart: "clawed" and
+    "claude" are both `K L AO D`, "cloud" is `K L AW D`. Layer it over
+    the scorer: both keys in the dictionary and phonemes equal (stress
+    ignored) is a homophone, accept; both in but unequal, drop the
+    phonetic boost and let plain Levenshtein decide (rejects "cloud" at
+    0.33); either out — names usually are — falls back to Metaphone as
+    today. Multi-word runs concatenate per-word phonemes when every word
+    is in. `cmudict-fast` on crates.io; a few MB of data, no desktop
+    deps, testable in the sandbox. Smaller than and independent of
+    model-side biasing (6), which is still the better endpoint.
 
 ## Engine
 
