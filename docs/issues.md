@@ -1,17 +1,20 @@
 # Issues
 
 Open work that is not a design decision (those go in `docs/adr/`). Local
-until the repo is on GitHub, then these move to `gh issue`. Newest at the
-bottom of each section; delete an entry when it is done, git remembers.
+until the repo is on GitHub, then these move to `gh issue`. Numbers are
+permanent: a new entry takes the Next ID below (bump it) and goes at the
+bottom of its section. Delete an entry when it is done, git remembers;
+leave the gap, never renumber.
+
+Next ID: 14
 
 ## Host bring-up
 
 1. **The Key proxy has only done a plain Hold on a real keyboard.**
    ADR 0006 (everything else on the first host pass is verified as of
    2026-08-29, audio cues and autorepeat included). Still to check: a
-   second keyboard plugged in while running, keys stuck down after start
-   or quit, and whether `ptw setup`'s udev rule takes effect without a
-   relogin. Alt+click can only lose its Alt inside the 150 ms
+   second keyboard plugged in while running, and keys stuck down after
+   start or quit. Alt+click can only lose its Alt inside the 150 ms
    Deferral, so it is a thing to notice in use, not to test.
 2. **Deferral is a constant (150 ms).** Make it a config knob if anyone
    needs a different trade-off between Alt+click and slow chord presses.
