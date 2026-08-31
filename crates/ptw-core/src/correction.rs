@@ -16,8 +16,11 @@ use rphonetic::{DoubleMetaphone, Encoder};
 /// agreement this allows one edit in seven letters; "career" stays "career"
 /// next to "Carver".
 const ACCEPT_BELOW: f64 = 0.15;
-/// Levenshtein score multiplier when the phonetic codes agree.
-const PHONETIC_BOOST: f64 = 0.3;
+/// Levenshtein score multiplier when the phonetic codes agree. Homophones
+/// can disagree on half their letters ("clawed" is three edits from
+/// "Claude"), so sounding alike must carry a run up to that; "called" and
+/// "cold", four edits out, stay put.
+const PHONETIC_BOOST: f64 = 0.25;
 /// Keys shorter than this must match exactly; "cat" must not become "Kat".
 const MIN_FUZZY_LEN: usize = 4;
 /// How many more recognized words than its own an entry may cover, once
@@ -350,6 +353,20 @@ mod tests {
         assert_eq!(w3.correct_all("ask chat g p t now"), "ask Chat G P T now");
         assert_eq!(w.correct_all("jason carver said"), "Jason Carver said");
         assert_eq!(w.correct_all("jason, carver said"), "jason, carver said");
+    }
+
+    #[test]
+    fn homophones_with_half_their_letters_changed_are_corrected() {
+        let w = words(&["Claude"]);
+        assert_eq!(
+            w.correct_all("I asked clawed about it"),
+            "I asked Claude about it"
+        );
+        assert_eq!(w.correct_all("ask cloud something"), "ask Claude something");
+        // Same phonetic code but too many letters apart stays as heard.
+        for text in ["he called me", "a cold day", "the light glowed"] {
+            assert_eq!(w.correct_all(text), text);
+        }
     }
 
     #[test]
