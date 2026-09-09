@@ -100,7 +100,11 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
         }
     };
     let layout = layout::detect();
-    let source = HotkeySource::spawn(config.chord_in(&layout)?, commands.clone());
+    let source = HotkeySource::spawn(
+        config.chord_in(&layout)?,
+        config.deferral(),
+        commands.clone(),
+    );
     let mut daemon = Daemon {
         config_path: config_path.to_path_buf(),
         config_mtime: mtime(config_path),
@@ -134,6 +138,7 @@ impl Daemon {
             physical = chord.physical(),
             layout = self.layout.name(),
             mode = ?self.source.mode(),
+            deferral_ms = self.config.deferral_ms,
             what
         );
     }
@@ -258,6 +263,7 @@ impl Daemon {
                     Ok(chord) => self.source.set_chord(chord),
                     Err(e) => warn!(error = %e, "keeping the old hotkey"),
                 }
+                self.source.set_deferral(config.deferral());
                 self.words = CustomWords::new(&config.custom_words);
                 self.config = config;
                 self.log_hotkey("config reloaded");

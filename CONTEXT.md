@@ -57,7 +57,7 @@ ptw's stand-in for the keyboard: it takes every key from the real keyboards, kee
 _Avoid_: interceptor, remapper, grab (that is the mechanism)
 
 **Deferral**:
-The moment (up to 150 ms) the Key proxy waits after a Hotkey modifier press to see whether the rest of the Hotkey follows before the desktop is told about it.
+The moment (500 ms by default, `deferral_ms` in the config) the Key proxy waits after a Hotkey modifier press to see whether the rest of the Hotkey follows before the desktop is told about it.
 _Avoid_: hold-back (that is the Correction term), debounce, delay
 
 **Typist**:

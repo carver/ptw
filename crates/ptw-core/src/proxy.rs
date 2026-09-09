@@ -13,9 +13,11 @@ use crate::hotkey::{Chord, HotkeyEvent, HotkeyMachine, KeyAction, KeyEvent};
 use crate::keys::{self, KeyCode};
 
 /// How long a chord modifier press waits for the next key before the
-/// compositor gets it. Chords are pressed within 50-100 ms; Alt+click
-/// inside this window loses its Alt.
-pub const DEFERRAL: Duration = Duration::from_millis(150);
+/// compositor gets it, unless the config says otherwise. Chords land
+/// 50-250 ms apart in practice; a chord slower than this leaks a bare Alt
+/// tap, which Firefox and GTK apps take for a menu bar toggle. Alt+click
+/// inside the window loses its Alt.
+pub const DEFAULT_DEFERRAL: Duration = Duration::from_millis(500);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Output {
@@ -38,6 +40,7 @@ pub enum Mode {
 pub struct KeyProxy {
     mode: Mode,
     machine: HotkeyMachine,
+    deferral: Duration,
     /// Deferred chord modifier presses, oldest first.
     deferred: Vec<(KeyCode, Instant)>,
     /// Keys the compositor believes are down.
@@ -46,10 +49,11 @@ pub struct KeyProxy {
 }
 
 impl KeyProxy {
-    pub fn new(chord: Chord, mode: Mode) -> Self {
+    pub fn new(chord: Chord, mode: Mode, deferral: Duration) -> Self {
         Self {
             mode,
             machine: HotkeyMachine::new(chord),
+            deferral,
             deferred: Vec::new(),
             forwarded: BTreeSet::new(),
             modifiers_held: false,
@@ -72,9 +76,18 @@ impl KeyProxy {
         out
     }
 
+    pub fn deferral(&self) -> Duration {
+        self.deferral
+    }
+
+    /// Applies to presses already deferred as well.
+    pub fn set_deferral(&mut self, deferral: Duration) {
+        self.deferral = deferral;
+    }
+
     /// When [`Self::on_deadline`] must next be called, if anything is deferred.
     pub fn deadline(&self) -> Option<Instant> {
-        self.deferred.first().map(|(_, at)| *at + DEFERRAL)
+        self.deferred.first().map(|(_, at)| *at + self.deferral)
     }
 
     pub fn on_deadline(&mut self, now: Instant) -> Vec<Output> {
@@ -166,7 +179,7 @@ impl KeyProxy {
 
     fn expire(&mut self, now: Instant, out: &mut Vec<Output>) {
         while let Some((code, at)) = self.deferred.first().copied() {
-            if now < at + DEFERRAL {
+            if now < at + self.deferral {
                 break;
             }
             self.deferred.remove(0);
@@ -208,7 +221,7 @@ mod tests {
     use crate::keys::{LEFT_ALT, LEFT_CTRL, LEFT_SHIFT, RIGHT_CTRL, key_code};
 
     fn proxy(chord: &str) -> KeyProxy {
-        KeyProxy::new(chord.parse().unwrap(), Mode::Grab)
+        KeyProxy::new(chord.parse().unwrap(), Mode::Grab, DEFAULT_DEFERRAL)
     }
 
     fn fwd(event: KeyEvent) -> Output {
@@ -228,7 +241,7 @@ mod tests {
         let mut p = proxy("Alt+z");
         let t0 = Instant::now();
         assert_eq!(p.on_key(KeyEvent::press(LEFT_ALT), t0), vec![]);
-        assert_eq!(p.deadline(), Some(t0 + DEFERRAL));
+        assert_eq!(p.deadline(), Some(t0 + DEFAULT_DEFERRAL));
         assert_eq!(
             p.on_key(KeyEvent::press(z()), t0 + Duration::from_millis(50)),
             vec![Output::Hotkey(HotkeyEvent::Start)]
@@ -280,6 +293,20 @@ mod tests {
         );
     }
 
+    /// Seen on the host 2026-09-09: chords pressed 225 ms apart leaked an
+    /// Alt tap past a 150 ms Deferral, and Firefox opened its menu bar.
+    #[test]
+    fn a_chord_pressed_a_quarter_second_apart_is_still_swallowed() {
+        let mut p = proxy("Alt+z");
+        let t0 = Instant::now();
+        p.on_key(KeyEvent::press(LEFT_ALT), t0);
+        assert_eq!(p.on_deadline(t0 + Duration::from_millis(250)), vec![]);
+        assert_eq!(
+            p.on_key(KeyEvent::press(z()), t0 + Duration::from_millis(250)),
+            vec![Output::Hotkey(HotkeyEvent::Start)]
+        );
+    }
+
     #[test]
     fn a_slow_alt_is_forwarded_at_the_deadline() {
         let mut p = proxy("Alt+z");
@@ -287,7 +314,7 @@ mod tests {
         p.on_key(KeyEvent::press(LEFT_ALT), t0);
         assert_eq!(p.on_deadline(t0 + Duration::from_millis(100)), vec![]);
         assert_eq!(
-            p.on_deadline(t0 + DEFERRAL),
+            p.on_deadline(t0 + DEFAULT_DEFERRAL),
             vec![fwd(KeyEvent::press(LEFT_ALT)), Output::ModifiersHeld(true)]
         );
         assert_eq!(p.deadline(), None);
@@ -303,7 +330,7 @@ mod tests {
         let mut p = proxy("Alt+z");
         let t0 = Instant::now();
         p.on_key(KeyEvent::press(LEFT_ALT), t0);
-        p.on_deadline(t0 + DEFERRAL);
+        p.on_deadline(t0 + DEFAULT_DEFERRAL);
         assert_eq!(
             p.on_key(KeyEvent::press(z()), t0 + Duration::from_millis(300)),
             vec![
@@ -457,7 +484,11 @@ mod tests {
 
     #[test]
     fn pass_through_only_reports() {
-        let mut p = KeyProxy::new("Alt+z".parse().unwrap(), Mode::PassThrough);
+        let mut p = KeyProxy::new(
+            "Alt+z".parse().unwrap(),
+            Mode::PassThrough,
+            DEFAULT_DEFERRAL,
+        );
         let t0 = Instant::now();
         assert_eq!(
             p.on_key(KeyEvent::press(LEFT_ALT), t0),

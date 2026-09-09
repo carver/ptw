@@ -151,6 +151,16 @@ impl App {
                 }
             });
             ui.end_row();
+            ui.label("Deferral");
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::new(&mut self.config.deferral_ms)
+                        .range(0..=2000)
+                        .suffix(" ms"),
+                );
+                ui.weak("A chord modifier waits this long for the rest of the chord. A slower chord leaks the modifier. An Alt+click inside it loses its Alt.");
+            });
+            ui.end_row();
         });
     }
 

@@ -106,7 +106,7 @@ pub struct HotkeySource {
 
 impl HotkeySource {
     /// Starts reading. Returns once the first scan is done.
-    pub fn spawn(chord: Chord, commands: Sender<Command>) -> Self {
+    pub fn spawn(chord: Chord, deferral: Duration, commands: Sender<Command>) -> Self {
         let (virtual_keyboard, mode) = match open_virtual_keyboard() {
             Ok(keyboard) => (Some(keyboard), Mode::Grab),
             Err(e) => {
@@ -119,7 +119,7 @@ impl HotkeySource {
         };
         let shared = Arc::new(Shared {
             state: Mutex::new(State {
-                proxy: KeyProxy::new(chord, mode),
+                proxy: KeyProxy::new(chord, mode, deferral),
                 virtual_keyboard,
                 commands,
             }),
@@ -162,6 +162,11 @@ impl HotkeySource {
         let mut state = self.shared.lock();
         let outputs = state.proxy.set_chord(chord);
         state.dispatch(outputs);
+    }
+
+    pub fn set_deferral(&self, deferral: Duration) {
+        self.shared.lock().proxy.set_deferral(deferral);
+        self.shared.wake.notify_one();
     }
 }
 

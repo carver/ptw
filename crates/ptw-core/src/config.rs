@@ -12,6 +12,11 @@ use crate::hotkey::Chord;
 pub struct Config {
     /// The Hotkey chord, e.g. `Alt+z` or `RightCtrl`.
     pub hotkey: String,
+    /// The Deferral in milliseconds: how long a chord modifier press is
+    /// withheld from the desktop while the rest of the chord may still
+    /// follow. Chords slower than this leak a bare modifier tap; Alt+click
+    /// faster than this loses its Alt.
+    pub deferral_ms: u64,
     /// Custom words, one entry per word or phrase.
     pub custom_words: Vec<String>,
     pub engine: EngineConfig,
@@ -63,6 +68,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             hotkey: "Alt+z".to_string(),
+            deferral_ms: crate::proxy::DEFAULT_DEFERRAL.as_millis() as u64,
             custom_words: Vec::new(),
             engine: EngineConfig::default(),
             audio: AudioConfig::default(),
@@ -127,6 +133,10 @@ impl Config {
     /// The Hotkey under a QWERTY layout; the daemon uses [`Self::chord_in`].
     pub fn chord(&self) -> Result<Chord, crate::hotkey::ChordParseError> {
         self.hotkey.parse()
+    }
+
+    pub fn deferral(&self) -> std::time::Duration {
+        std::time::Duration::from_millis(self.deferral_ms)
     }
 
     pub fn chord_in(
@@ -224,6 +234,7 @@ mod tests {
         let path = temp_path("roundtrip");
         let config = Config {
             hotkey: "RightCtrl".into(),
+            deferral_ms: 150,
             custom_words: vec!["Caitlyn".into(), "Jason Carver".into()],
             engine: EngineConfig {
                 lookahead_ms: 160,
@@ -253,6 +264,7 @@ mod tests {
         assert_eq!(config.custom_words, vec!["Caitlyn".to_string()]);
         assert_eq!(config.engine.lookahead_ms, 160);
         assert_eq!(config.hotkey, "Alt+z");
+        assert_eq!(config.deferral(), crate::proxy::DEFAULT_DEFERRAL);
 
         std::fs::write(&path, "hotkey = \"Alt+z\"\nbanana = 1\n").unwrap();
         assert!(matches!(
