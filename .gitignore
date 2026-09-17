@@ -4,3 +4,4 @@ tests/data/ptw sample 5.flac
 bench/keyterms.txt
 bench/results/keyterms/
 bench/results/*/*sample5*
+tests/data/names.toml

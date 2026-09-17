@@ -22,8 +22,15 @@ The Engine path is fully testable here:
 cargo test --workspace
 PTW_TEST_MODEL=target/bench/models/nemotron-speech-streaming-en-0.6b-Q8_0.gguf \
 PTW_TEST_WAV=target/bench/sample1.wav cargo test -p ptw-engine-transcribe -- --nocapture
+PTW_TEST_MODEL=target/bench/models/nemotron-speech-streaming-en-0.6b-Q8_0.gguf \
+PTW_TEST_NAMES=tests/data/names.toml cargo test -p ptw-engine-transcribe --test names
 ptw --config <cfg> transcribe --realtime target/bench/sample3.wav
 ```
+
+The names test types recording 5 through the Engine and Correction and
+asserts the Custom words in `tests/data/names.toml` come out spelled as
+listed. That file, the recording and everything quoting them are
+gitignored: the names never go into git, docs, commit messages or memory.
 
 `bench/` holds the benchmark harness and its result logs; `bench/README.md`
 says how to build and run it. `target/bench/` (gitignored, on the host
