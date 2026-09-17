@@ -13,7 +13,8 @@ Next ID: 16
 1. **The Key proxy has only done a plain Hold on a real keyboard.**
    ADR 0006 (everything else on the first host pass is verified as of
    2026-08-29, audio cues and autorepeat included; a chord held across
-   a restart waited 5.5 s for the grab and left z alive, 2026-09-17).
+   a restart waited 5.5 s for the grab, left z alive and started no
+   phantom Hold from the queued keys, 2026-09-17).
    Still to check: a second keyboard plugged in while running. Quit
    looks safe by reading mutter and libinput:
    removing the proxy device releases its keys, and a release with no
