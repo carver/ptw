@@ -218,7 +218,8 @@ impl KeyProxy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keys::{LEFT_ALT, LEFT_CTRL, LEFT_SHIFT, RIGHT_CTRL, key_code};
+    use crate::keys::{LEFT_ALT, LEFT_CTRL, LEFT_SHIFT, RIGHT_ALT, RIGHT_CTRL, key_code};
+    use proptest::prelude::*;
 
     fn proxy(chord: &str) -> KeyProxy {
         KeyProxy::new(chord.parse().unwrap(), Mode::Grab, DEFAULT_DEFERRAL)
@@ -507,5 +508,88 @@ mod tests {
             vec![Output::ModifiersHeld(false)]
         );
         assert_eq!(p.deadline(), None);
+    }
+
+    /// One thing a hand can do at the physical keyboard, or time passing.
+    #[derive(Clone, Copy, Debug)]
+    enum Step {
+        Press(usize),
+        Release(usize),
+        Repeat(usize),
+        Wait(u64),
+    }
+
+    fn step() -> impl Strategy<Value = Step> {
+        prop_oneof![
+            (0..6usize).prop_map(Step::Press),
+            (0..6usize).prop_map(Step::Release),
+            (0..6usize).prop_map(Step::Repeat),
+            (0..700u64).prop_map(Step::Wait),
+        ]
+    }
+
+    /// What the compositor believes is down, replayed from the forwarded
+    /// events the way the kernel and compositor treat them.
+    fn apply_forwarded(down: &mut BTreeSet<KeyCode>, outputs: &[Output]) {
+        for output in outputs {
+            if let Output::Forward(event) = output {
+                match event.action {
+                    KeyAction::Press => {
+                        down.insert(event.code);
+                    }
+                    KeyAction::Release => {
+                        down.remove(&event.code);
+                    }
+                    KeyAction::Repeat => {}
+                }
+            }
+        }
+    }
+
+    proptest! {
+        /// A key the compositor sees pressed must also be seen released once
+        /// the hand has let go of everything: a stuck key kills that key for
+        /// every app until ptw restarts.
+        #[test]
+        fn no_key_stays_down_once_the_hand_lets_go(
+            steps in proptest::collection::vec(step(), 0..40),
+        ) {
+            let keys = [LEFT_ALT, RIGHT_ALT, z(), tab(), LEFT_SHIFT, key_code("x").unwrap()];
+            let mut p = proxy("Alt+z");
+            let t0 = Instant::now();
+            let mut now = t0;
+            let mut held: BTreeSet<KeyCode> = BTreeSet::new();
+            let mut down: BTreeSet<KeyCode> = BTreeSet::new();
+            let drive = |p: &mut KeyProxy, event: KeyEvent, now: Instant, down: &mut BTreeSet<KeyCode>| {
+                apply_forwarded(down, &p.on_key(event, now));
+            };
+            for step in steps {
+                match step {
+                    Step::Press(i) if held.insert(keys[i]) => {
+                        drive(&mut p, KeyEvent::press(keys[i]), now, &mut down);
+                    }
+                    Step::Release(i) if held.remove(&keys[i]) => {
+                        drive(&mut p, KeyEvent::release(keys[i]), now, &mut down);
+                    }
+                    Step::Repeat(i) if held.contains(&keys[i]) => {
+                        let event = KeyEvent { code: keys[i], action: KeyAction::Repeat };
+                        drive(&mut p, event, now, &mut down);
+                    }
+                    Step::Wait(ms) => {
+                        now += Duration::from_millis(ms);
+                        if p.deadline().is_some_and(|d| d <= now) {
+                            apply_forwarded(&mut down, &p.on_deadline(now));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            for code in std::mem::take(&mut held) {
+                drive(&mut p, KeyEvent::release(code), now, &mut down);
+            }
+            now += Duration::from_secs(5);
+            apply_forwarded(&mut down, &p.on_deadline(now));
+            prop_assert!(down.is_empty(), "compositor still has {down:?} down");
+        }
     }
 }
