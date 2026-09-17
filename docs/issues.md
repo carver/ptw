@@ -12,11 +12,10 @@ Next ID: 16
 
 1. **The Key proxy has only done a plain Hold on a real keyboard.**
    ADR 0006 (everything else on the first host pass is verified as of
-   2026-08-29, audio cues and autorepeat included). Still to check: a
-   second keyboard plugged in while running, and a chord held across a
-   restart, which should now log `keys held down` and leave every key
-   alive once released (the fix for the dead z, ADR 0006, has only run
-   with idle hands). Quit looks safe by reading mutter and libinput:
+   2026-08-29, audio cues and autorepeat included; a chord held across
+   a restart waited 5.5 s for the grab and left z alive, 2026-09-17).
+   Still to check: a second keyboard plugged in while running. Quit
+   looks safe by reading mutter and libinput:
    removing the proxy device releases its keys, and a release with no
    press is ignored. Alt+click can only lose its Alt inside the
    Deferral, so it is a thing to notice in use, not to test.
