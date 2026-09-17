@@ -2590,6 +2590,8 @@ version = "0.1.0"
 dependencies = [
  "hound",
  "ptw-core",
+ "serde",
+ "toml",
  "tracing",
  "transcribe-cpp",
 ]
