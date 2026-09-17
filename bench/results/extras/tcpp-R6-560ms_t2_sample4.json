@@ -1,0 +1,174 @@
+{
+  "att_right": 6,
+  "audio_s": 26.5404375,
+  "chunk_max_ms": 286.314997,
+  "chunk_mean_ms": 24.986391352409637,
+  "chunk_p95_ms": 183.658805,
+  "commit_log": [
+    {
+      "added": "Actually",
+      "chunk": 20,
+      "t": 1.68
+    },
+    {
+      "added": ", read",
+      "chunk": 27,
+      "t": 2.24
+    },
+    {
+      "added": "ing",
+      "chunk": 34,
+      "t": 2.8
+    },
+    {
+      "added": " stuff that's already",
+      "chunk": 41,
+      "t": 3.36
+    },
+    {
+      "added": " written is",
+      "chunk": 48,
+      "t": 3.92
+    },
+    {
+      "added": " not",
+      "chunk": 55,
+      "t": 4.48
+    },
+    {
+      "added": " really",
+      "chunk": 62,
+      "t": 5.04
+    },
+    {
+      "added": " the",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " example",
+      "chunk": 76,
+      "t": 6.16
+    },
+    {
+      "added": " data that we're",
+      "chunk": 83,
+      "t": 6.72
+    },
+    {
+      "added": " looking for here",
+      "chunk": 90,
+      "t": 7.28
+    },
+    {
+      "added": ".",
+      "chunk": 111,
+      "t": 8.96
+    },
+    {
+      "added": " It would be best to",
+      "chunk": 118,
+      "t": 9.52
+    },
+    {
+      "added": " just",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": " use",
+      "chunk": 132,
+      "t": 10.64
+    },
+    {
+      "added": " whatever words",
+      "chunk": 146,
+      "t": 11.76
+    },
+    {
+      "added": " come to mind",
+      "chunk": 153,
+      "t": 12.32
+    },
+    {
+      "added": " off the top of my head",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": ".",
+      "chunk": 202,
+      "t": 16.24
+    },
+    {
+      "added": " So",
+      "chunk": 209,
+      "t": 16.8
+    },
+    {
+      "added": " that's",
+      "chunk": 230,
+      "t": 18.48
+    },
+    {
+      "added": " more like",
+      "chunk": 237,
+      "t": 19.04
+    },
+    {
+      "added": " what",
+      "chunk": 251,
+      "t": 20.16
+    },
+    {
+      "added": " I would actually",
+      "chunk": 258,
+      "t": 20.72
+    },
+    {
+      "added": " be saying",
+      "chunk": 265,
+      "t": 21.28
+    },
+    {
+      "added": " as",
+      "chunk": 279,
+      "t": 22.4
+    },
+    {
+      "added": " I'm dictating to",
+      "chunk": 286,
+      "t": 22.96
+    },
+    {
+      "added": " the",
+      "chunk": 293,
+      "t": 23.52
+    },
+    {
+      "added": " computer",
+      "chunk": 300,
+      "t": 24.08
+    },
+    {
+      "added": ".",
+      "chunk": 332,
+      "t": 26.5404375
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample4",
+  "final_committed": "Actually, reading stuff that's already written is not really the example data that we're looking for here. It would be best to just use whatever words come to mind off the top of my head. So that's more like what I would actually be saying as I'm dictating to the computer.",
+  "final_text": "Actually, reading stuff that's already written is not really the example data that we're looking for here. It would be best to just use whatever words come to mind off the top of my head. So that's more like what I would actually be saying as I'm dictating to the computer.",
+  "finalize_ms": 185.655188,
+  "load_ms": 946.673857,
+  "model": "tcpp-R6-560ms",
+  "n_chunks": 332,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1107.703125,
+  "revisions": [],
+  "rtf": 0.31256010489653757,
+  "tentative_log": [],
+  "threads": 2,
+  "total_compute_s": 8.295481929
+}

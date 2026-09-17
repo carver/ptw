@@ -42,7 +42,7 @@ Next ID: 16
    is in no release yet (v1.13.8 is 2026-09-10); the C API did not change,
    so the next release needs only a crate bump. Same Model, other runtime:
    transcribe.cpp stays selectable through `engine.kind`. Measure first:
-   `target/bench/harness/run_beam.sh` runs greedy, beam-4 and beam-4 with
+   `bench/run_beam.sh` runs greedy, beam-4 and beam-4 with
    the keyterms as hotwords and logs how many words each revision reverts.
    Beam search can revise earlier text between chunks, which the Typist
    cannot take back, so the Committed/Tentative split needs a rule before
@@ -52,7 +52,7 @@ Next ID: 16
    container or wait for the release.
 7. **Moonshine v2** only if a faster x86 build appears; 2–4x slower and
    less accurate on our samples (see `docs/research/engine-benchmark.md`).
-8. **Benchmark reference transcripts** in `target/bench/` were not
+8. **Benchmark reference transcripts** in `bench/results/offline` were not
    proofread; WER numbers in the benchmark report are approximate.
 
 ## Typing and hotkey

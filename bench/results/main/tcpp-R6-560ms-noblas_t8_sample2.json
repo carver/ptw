@@ -1,0 +1,199 @@
+{
+  "att_right": 6,
+  "audio_s": 26.018,
+  "chunk_max_ms": 338.31042099999996,
+  "chunk_mean_ms": 30.736470266871166,
+  "chunk_p95_ms": 200.765705,
+  "commit_log": [
+    {
+      "added": "I suppose I",
+      "chunk": 27,
+      "t": 2.24
+    },
+    {
+      "added": " should have",
+      "chunk": 34,
+      "t": 2.8
+    },
+    {
+      "added": " said",
+      "chunk": 41,
+      "t": 3.36
+    },
+    {
+      "added": " grill with",
+      "chunk": 48,
+      "t": 3.92
+    },
+    {
+      "added": " docs because",
+      "chunk": 55,
+      "t": 4.48
+    },
+    {
+      "added": " it seems import",
+      "chunk": 62,
+      "t": 5.04
+    },
+    {
+      "added": "ant to write the",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " results of",
+      "chunk": 76,
+      "t": 6.16
+    },
+    {
+      "added": " this planning",
+      "chunk": 83,
+      "t": 6.72
+    },
+    {
+      "added": " session down",
+      "chunk": 90,
+      "t": 7.28
+    },
+    {
+      "added": " for",
+      "chunk": 104,
+      "t": 8.4
+    },
+    {
+      "added": " future sessions",
+      "chunk": 111,
+      "t": 8.96
+    },
+    {
+      "added": " to have back",
+      "chunk": 118,
+      "t": 9.52
+    },
+    {
+      "added": "ground",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": ". Plan to",
+      "chunk": 139,
+      "t": 11.2
+    },
+    {
+      "added": " write down these findings",
+      "chunk": 146,
+      "t": 11.76
+    },
+    {
+      "added": " when it",
+      "chunk": 160,
+      "t": 12.88
+    },
+    {
+      "added": " resolves",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": ". Wait",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": ", should I just",
+      "chunk": 188,
+      "t": 15.12
+    },
+    {
+      "added": " be using",
+      "chunk": 195,
+      "t": 15.68
+    },
+    {
+      "added": " handy",
+      "chunk": 202,
+      "t": 16.24
+    },
+    {
+      "added": "? I wasn't using",
+      "chunk": 216,
+      "t": 17.36
+    },
+    {
+      "added": " it because",
+      "chunk": 223,
+      "t": 17.92
+    },
+    {
+      "added": " it doesn't seem to",
+      "chunk": 230,
+      "t": 18.48
+    },
+    {
+      "added": " be",
+      "chunk": 237,
+      "t": 19.04
+    },
+    {
+      "added": " streaming",
+      "chunk": 244,
+      "t": 19.6
+    },
+    {
+      "added": ", but if it",
+      "chunk": 258,
+      "t": 20.72
+    },
+    {
+      "added": " streams or",
+      "chunk": 265,
+      "t": 21.28
+    },
+    {
+      "added": " results, maybe",
+      "chunk": 272,
+      "t": 21.84
+    },
+    {
+      "added": " it's finding it",
+      "chunk": 279,
+      "t": 22.4
+    },
+    {
+      "added": " directly instead of",
+      "chunk": 286,
+      "t": 22.96
+    },
+    {
+      "added": " building PT",
+      "chunk": 293,
+      "t": 23.52
+    },
+    {
+      "added": "W",
+      "chunk": 300,
+      "t": 24.08
+    },
+    {
+      "added": ".",
+      "chunk": 321,
+      "t": 25.76
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample2",
+  "final_committed": "I suppose I should have said grill with docs because it seems important to write the results of this planning session down for future sessions to have background. Plan to write down these findings when it resolves. Wait, should I just be using handy? I wasn't using it because it doesn't seem to be streaming, but if it streams or results, maybe it's finding it directly instead of building PTW.",
+  "final_text": "I suppose I should have said grill with docs because it seems important to write the results of this planning session down for future sessions to have background. Plan to write down these findings when it resolves. Wait, should I just be using handy? I wasn't using it because it doesn't seem to be streaming, but if it streams or results, maybe it's finding it directly instead of building PTW.",
+  "finalize_ms": 272.66313599999995,
+  "load_ms": 1149.228445,
+  "model": "tcpp-R6-560ms-noblas",
+  "n_chunks": 326,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1102.8203125,
+  "revisions": [],
+  "rtf": 0.38512142774233227,
+  "tentative_log": [],
+  "threads": 8,
+  "total_compute_s": 10.020089307000001
+}

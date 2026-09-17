@@ -1,0 +1,174 @@
+{
+  "att_right": 6,
+  "audio_s": 24.8685625,
+  "chunk_max_ms": 353.03734799999995,
+  "chunk_mean_ms": 29.597485668810283,
+  "chunk_p95_ms": 204.446876,
+  "commit_log": [
+    {
+      "added": "So",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " what is it that",
+      "chunk": 76,
+      "t": 6.16
+    },
+    {
+      "added": " we want",
+      "chunk": 83,
+      "t": 6.72
+    },
+    {
+      "added": " here",
+      "chunk": 90,
+      "t": 7.28
+    },
+    {
+      "added": "? I guess",
+      "chunk": 97,
+      "t": 7.84
+    },
+    {
+      "added": " I could just",
+      "chunk": 104,
+      "t": 8.4
+    },
+    {
+      "added": " read back somet",
+      "chunk": 111,
+      "t": 8.96
+    },
+    {
+      "added": "hing",
+      "chunk": 118,
+      "t": 9.52
+    },
+    {
+      "added": " that you wrote",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": " to me",
+      "chunk": 132,
+      "t": 10.64
+    },
+    {
+      "added": " hot",
+      "chunk": 153,
+      "t": 12.32
+    },
+    {
+      "added": "key with",
+      "chunk": 160,
+      "t": 12.88
+    },
+    {
+      "added": " release detect",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": "ion",
+      "chunk": 174,
+      "t": 14.0
+    },
+    {
+      "added": " on GNOM",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": "E 46",
+      "chunk": 188,
+      "t": 15.12
+    },
+    {
+      "added": " the global short",
+      "chunk": 195,
+      "t": 15.68
+    },
+    {
+      "added": "cuts port",
+      "chunk": 202,
+      "t": 16.24
+    },
+    {
+      "added": "al has no",
+      "chunk": 209,
+      "t": 16.8
+    },
+    {
+      "added": " back end",
+      "chunk": 216,
+      "t": 17.36
+    },
+    {
+      "added": " interrupt",
+      "chunk": 223,
+      "t": 17.92
+    },
+    {
+      "added": "ed GNOM",
+      "chunk": 230,
+      "t": 18.48
+    },
+    {
+      "added": "E 48",
+      "chunk": 237,
+      "t": 19.04
+    },
+    {
+      "added": " and GNOME",
+      "chunk": 251,
+      "t": 20.16
+    },
+    {
+      "added": " shell",
+      "chunk": 258,
+      "t": 20.72
+    },
+    {
+      "added": "'s own",
+      "chunk": 265,
+      "t": 21.28
+    },
+    {
+      "added": " grab AP",
+      "chunk": 272,
+      "t": 21.84
+    },
+    {
+      "added": "I is close",
+      "chunk": 279,
+      "t": 22.4
+    },
+    {
+      "added": " to third",
+      "chunk": 286,
+      "t": 22.96
+    },
+    {
+      "added": " parties",
+      "chunk": 293,
+      "t": 23.52
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample3",
+  "final_committed": "So what is it that we want here? I guess I could just read back something that you wrote to me hotkey with release detection on GNOME 46 the global shortcuts portal has no back end interrupted GNOME 48 and GNOME shell's own grab API is close to third parties",
+  "final_text": "So what is it that we want here? I guess I could just read back something that you wrote to me hotkey with release detection on GNOME 46 the global shortcuts portal has no back end interrupted GNOME 48 and GNOME shell's own grab API is close to third parties",
+  "finalize_ms": 208.369792,
+  "load_ms": 1008.1803519999999,
+  "model": "tcpp-R6-560ms-rep",
+  "n_chunks": 311,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1106.63671875,
+  "revisions": [],
+  "rtf": 0.3701387260723252,
+  "tentative_log": [],
+  "threads": 4,
+  "total_compute_s": 9.204818042999998
+}

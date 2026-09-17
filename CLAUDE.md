@@ -25,10 +25,12 @@ PTW_TEST_WAV=target/bench/sample1.wav cargo test -p ptw-engine-transcribe -- --n
 ptw --config <cfg> transcribe --realtime target/bench/sample3.wav
 ```
 
-`target/bench/` (gitignored, on the host mount) has the model, 16 kHz
-copies of the user's recordings from `tests/data/`, and the benchmark
-harness. Keep models and big builds there: the sandbox root is a 20 GB
-overlay that has filled up once.
+`bench/` holds the benchmark harness and its result logs; `bench/README.md`
+says how to build and run it. `target/bench/` (gitignored, on the host
+mount) has the models, prebuilt libraries, 16 kHz copies of the user's
+recordings from `tests/data/`, and the harness build dirs. Keep models
+and big builds there: the sandbox root is a 20 GB overlay that has
+filled up once.
 
 `ptw daemon`, `ptw doctor`, the tray and typing need the host. Hand the
 user exact commands and ask for the output.

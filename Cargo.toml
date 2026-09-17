@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/ptw-core", "crates/ptw-engine-transcribe", "crates/ptw"]
+# Benchmark harnesses build on their own (see bench/README.md).
+exclude = ["bench/sherpa-bench", "bench/tcpp-bench"]
 
 [workspace.package]
 version = "0.1.0"

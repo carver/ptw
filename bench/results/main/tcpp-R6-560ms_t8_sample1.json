@@ -1,0 +1,124 @@
+{
+  "att_right": 6,
+  "audio_s": 15.36,
+  "chunk_max_ms": 418.06624999999997,
+  "chunk_mean_ms": 45.190195963541676,
+  "chunk_p95_ms": 335.08947700000004,
+  "commit_log": [
+    {
+      "added": "Hey,",
+      "chunk": 20,
+      "t": 1.68
+    },
+    {
+      "added": " suppose",
+      "chunk": 27,
+      "t": 2.24
+    },
+    {
+      "added": " I should take",
+      "chunk": 34,
+      "t": 2.8
+    },
+    {
+      "added": " out",
+      "chunk": 41,
+      "t": 3.36
+    },
+    {
+      "added": " the",
+      "chunk": 48,
+      "t": 3.92
+    },
+    {
+      "added": " mouth",
+      "chunk": 55,
+      "t": 4.48
+    },
+    {
+      "added": " guard before I",
+      "chunk": 62,
+      "t": 5.04
+    },
+    {
+      "added": " start talking",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " here",
+      "chunk": 76,
+      "t": 6.16
+    },
+    {
+      "added": ". This is",
+      "chunk": 118,
+      "t": 9.52
+    },
+    {
+      "added": "n't the best",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": " time",
+      "chunk": 132,
+      "t": 10.64
+    },
+    {
+      "added": " to capture my vo",
+      "chunk": 139,
+      "t": 11.2
+    },
+    {
+      "added": "ice because I'm",
+      "chunk": 146,
+      "t": 11.76
+    },
+    {
+      "added": " a little",
+      "chunk": 153,
+      "t": 12.32
+    },
+    {
+      "added": " tired",
+      "chunk": 160,
+      "t": 12.88
+    },
+    {
+      "added": " and so my vo",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": "ice is probably",
+      "chunk": 174,
+      "t": 14.0
+    },
+    {
+      "added": " creaky",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": ".",
+      "chunk": 192,
+      "t": 15.36
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample1",
+  "final_committed": "Hey, suppose I should take out the mouth guard before I start talking here. This isn't the best time to capture my voice because I'm a little tired and so my voice is probably creaky.",
+  "final_text": "Hey, suppose I should take out the mouth guard before I start talking here. This isn't the best time to capture my voice because I'm a little tired and so my voice is probably creaky.",
+  "finalize_ms": 293.493844,
+  "load_ms": 2177.453076,
+  "model": "tcpp-R6-560ms",
+  "n_chunks": 192,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1090.5546875,
+  "revisions": [],
+  "rtf": 0.564877449544271,
+  "tentative_log": [],
+  "threads": 8,
+  "total_compute_s": 8.676517625000002
+}

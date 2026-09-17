@@ -1,0 +1,414 @@
+{
+  "att_right": 1,
+  "audio_s": 26.018,
+  "chunk_max_ms": 176.290158,
+  "chunk_mean_ms": 56.7707731196319,
+  "chunk_p95_ms": 147.779161,
+  "commit_log": [
+    {
+      "added": "I",
+      "chunk": 23,
+      "t": 1.92
+    },
+    {
+      "added": " suppose",
+      "chunk": 25,
+      "t": 2.08
+    },
+    {
+      "added": " I",
+      "chunk": 29,
+      "t": 2.4
+    },
+    {
+      "added": " should",
+      "chunk": 31,
+      "t": 2.56
+    },
+    {
+      "added": " have",
+      "chunk": 33,
+      "t": 2.72
+    },
+    {
+      "added": " said",
+      "chunk": 37,
+      "t": 3.04
+    },
+    {
+      "added": " grill",
+      "chunk": 47,
+      "t": 3.84
+    },
+    {
+      "added": " with",
+      "chunk": 51,
+      "t": 4.16
+    },
+    {
+      "added": " dock",
+      "chunk": 53,
+      "t": 4.32
+    },
+    {
+      "added": "s",
+      "chunk": 55,
+      "t": 4.48
+    },
+    {
+      "added": " because",
+      "chunk": 57,
+      "t": 4.64
+    },
+    {
+      "added": " it seem",
+      "chunk": 59,
+      "t": 4.8
+    },
+    {
+      "added": "s import",
+      "chunk": 61,
+      "t": 4.96
+    },
+    {
+      "added": "ant",
+      "chunk": 63,
+      "t": 5.12
+    },
+    {
+      "added": " to",
+      "chunk": 67,
+      "t": 5.44
+    },
+    {
+      "added": " write",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " the",
+      "chunk": 71,
+      "t": 5.76
+    },
+    {
+      "added": " results",
+      "chunk": 73,
+      "t": 5.92
+    },
+    {
+      "added": " of",
+      "chunk": 77,
+      "t": 6.24
+    },
+    {
+      "added": " this",
+      "chunk": 79,
+      "t": 6.4
+    },
+    {
+      "added": " planning",
+      "chunk": 85,
+      "t": 6.88
+    },
+    {
+      "added": " session",
+      "chunk": 87,
+      "t": 7.04
+    },
+    {
+      "added": " down",
+      "chunk": 89,
+      "t": 7.2
+    },
+    {
+      "added": " for",
+      "chunk": 105,
+      "t": 8.48
+    },
+    {
+      "added": " future",
+      "chunk": 107,
+      "t": 8.64
+    },
+    {
+      "added": " sess",
+      "chunk": 109,
+      "t": 8.8
+    },
+    {
+      "added": "ions",
+      "chunk": 111,
+      "t": 8.96
+    },
+    {
+      "added": " to",
+      "chunk": 117,
+      "t": 9.44
+    },
+    {
+      "added": " have",
+      "chunk": 119,
+      "t": 9.6
+    },
+    {
+      "added": " background",
+      "chunk": 121,
+      "t": 9.76
+    },
+    {
+      "added": " pl",
+      "chunk": 135,
+      "t": 10.88
+    },
+    {
+      "added": "an",
+      "chunk": 137,
+      "t": 11.04
+    },
+    {
+      "added": " to",
+      "chunk": 139,
+      "t": 11.2
+    },
+    {
+      "added": " write",
+      "chunk": 141,
+      "t": 11.36
+    },
+    {
+      "added": " down",
+      "chunk": 143,
+      "t": 11.52
+    },
+    {
+      "added": " these",
+      "chunk": 145,
+      "t": 11.68
+    },
+    {
+      "added": " findings",
+      "chunk": 147,
+      "t": 11.84
+    },
+    {
+      "added": " when",
+      "chunk": 155,
+      "t": 12.48
+    },
+    {
+      "added": " it",
+      "chunk": 159,
+      "t": 12.8
+    },
+    {
+      "added": " resolves",
+      "chunk": 163,
+      "t": 13.12
+    },
+    {
+      "added": ".",
+      "chunk": 179,
+      "t": 14.4
+    },
+    {
+      "added": " Wait",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": ",",
+      "chunk": 185,
+      "t": 14.88
+    },
+    {
+      "added": " should",
+      "chunk": 187,
+      "t": 15.04
+    },
+    {
+      "added": " I just",
+      "chunk": 189,
+      "t": 15.2
+    },
+    {
+      "added": " be",
+      "chunk": 191,
+      "t": 15.36
+    },
+    {
+      "added": " using",
+      "chunk": 193,
+      "t": 15.52
+    },
+    {
+      "added": " handy",
+      "chunk": 199,
+      "t": 16.0
+    },
+    {
+      "added": "?",
+      "chunk": 211,
+      "t": 16.96
+    },
+    {
+      "added": " I",
+      "chunk": 213,
+      "t": 17.12
+    },
+    {
+      "added": " wasn't",
+      "chunk": 215,
+      "t": 17.28
+    },
+    {
+      "added": " using",
+      "chunk": 217,
+      "t": 17.44
+    },
+    {
+      "added": " it",
+      "chunk": 219,
+      "t": 17.6
+    },
+    {
+      "added": " because",
+      "chunk": 221,
+      "t": 17.76
+    },
+    {
+      "added": " it",
+      "chunk": 227,
+      "t": 18.24
+    },
+    {
+      "added": " doesn't seem",
+      "chunk": 229,
+      "t": 18.4
+    },
+    {
+      "added": " to",
+      "chunk": 231,
+      "t": 18.56
+    },
+    {
+      "added": " be",
+      "chunk": 233,
+      "t": 18.72
+    },
+    {
+      "added": " stream",
+      "chunk": 239,
+      "t": 19.2
+    },
+    {
+      "added": "ing",
+      "chunk": 241,
+      "t": 19.36
+    },
+    {
+      "added": ", but if",
+      "chunk": 253,
+      "t": 20.32
+    },
+    {
+      "added": " it stream",
+      "chunk": 259,
+      "t": 20.8
+    },
+    {
+      "added": "s",
+      "chunk": 263,
+      "t": 21.12
+    },
+    {
+      "added": " the results",
+      "chunk": 267,
+      "t": 21.44
+    },
+    {
+      "added": ", may",
+      "chunk": 269,
+      "t": 21.6
+    },
+    {
+      "added": "be",
+      "chunk": 271,
+      "t": 21.76
+    },
+    {
+      "added": " it's",
+      "chunk": 275,
+      "t": 22.08
+    },
+    {
+      "added": " finding",
+      "chunk": 277,
+      "t": 22.24
+    },
+    {
+      "added": " you",
+      "chunk": 279,
+      "t": 22.4
+    },
+    {
+      "added": " direct",
+      "chunk": 281,
+      "t": 22.56
+    },
+    {
+      "added": "ly",
+      "chunk": 283,
+      "t": 22.72
+    },
+    {
+      "added": " inst",
+      "chunk": 285,
+      "t": 22.88
+    },
+    {
+      "added": "ead of",
+      "chunk": 287,
+      "t": 23.04
+    },
+    {
+      "added": " building",
+      "chunk": 289,
+      "t": 23.2
+    },
+    {
+      "added": " P",
+      "chunk": 293,
+      "t": 23.52
+    },
+    {
+      "added": "T",
+      "chunk": 295,
+      "t": 23.68
+    },
+    {
+      "added": "W",
+      "chunk": 299,
+      "t": 24.0
+    },
+    {
+      "added": ".",
+      "chunk": 326,
+      "t": 26.018
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample2",
+  "final_committed": "I suppose I should have said grill with docks because it seems important to write the results of this planning session down for future sessions to have background plan to write down these findings when it resolves. Wait, should I just be using handy? I wasn't using it because it doesn't seem to be streaming, but if it streams the results, maybe it's finding you directly instead of building PTW.",
+  "final_text": "I suppose I should have said grill with docks because it seems important to write the results of this planning session down for future sessions to have background plan to write down these findings when it resolves. Wait, should I just be using handy? I wasn't using it because it doesn't seem to be streaming, but if it streams the results, maybe it's finding you directly instead of building PTW.",
+  "finalize_ms": 172.384438,
+  "load_ms": 1074.5953200000001,
+  "model": "tcpp-R1-160ms",
+  "n_chunks": 326,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1094.4921875,
+  "revisions": [],
+  "rtf": 0.7113256990160658,
+  "tentative_log": [],
+  "threads": 4,
+  "total_compute_s": 18.507272037
+}

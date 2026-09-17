@@ -1,0 +1,194 @@
+{
+  "att_right": 1,
+  "audio_s": 15.36,
+  "chunk_max_ms": 153.402161,
+  "chunk_mean_ms": 59.15742580729167,
+  "chunk_p95_ms": 136.608861,
+  "commit_log": [
+    {
+      "added": "Hey",
+      "chunk": 17,
+      "t": 1.44
+    },
+    {
+      "added": ",",
+      "chunk": 21,
+      "t": 1.76
+    },
+    {
+      "added": " supposed",
+      "chunk": 23,
+      "t": 1.92
+    },
+    {
+      "added": " I",
+      "chunk": 29,
+      "t": 2.4
+    },
+    {
+      "added": " should",
+      "chunk": 31,
+      "t": 2.56
+    },
+    {
+      "added": " take",
+      "chunk": 33,
+      "t": 2.72
+    },
+    {
+      "added": " out",
+      "chunk": 37,
+      "t": 3.04
+    },
+    {
+      "added": " the",
+      "chunk": 49,
+      "t": 4.0
+    },
+    {
+      "added": " mouth",
+      "chunk": 55,
+      "t": 4.48
+    },
+    {
+      "added": " card",
+      "chunk": 59,
+      "t": 4.8
+    },
+    {
+      "added": " before",
+      "chunk": 61,
+      "t": 4.96
+    },
+    {
+      "added": " I",
+      "chunk": 63,
+      "t": 5.12
+    },
+    {
+      "added": " start",
+      "chunk": 65,
+      "t": 5.28
+    },
+    {
+      "added": " talking",
+      "chunk": 69,
+      "t": 5.6
+    },
+    {
+      "added": " here",
+      "chunk": 77,
+      "t": 6.24
+    },
+    {
+      "added": " This",
+      "chunk": 117,
+      "t": 9.44
+    },
+    {
+      "added": " is",
+      "chunk": 119,
+      "t": 9.6
+    },
+    {
+      "added": "n't",
+      "chunk": 123,
+      "t": 9.92
+    },
+    {
+      "added": " the best",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": " time",
+      "chunk": 129,
+      "t": 10.4
+    },
+    {
+      "added": " to capture",
+      "chunk": 137,
+      "t": 11.04
+    },
+    {
+      "added": " my",
+      "chunk": 139,
+      "t": 11.2
+    },
+    {
+      "added": " voice",
+      "chunk": 141,
+      "t": 11.36
+    },
+    {
+      "added": " because",
+      "chunk": 145,
+      "t": 11.68
+    },
+    {
+      "added": " I'm",
+      "chunk": 147,
+      "t": 11.84
+    },
+    {
+      "added": " a little",
+      "chunk": 149,
+      "t": 12.0
+    },
+    {
+      "added": " tired",
+      "chunk": 157,
+      "t": 12.64
+    },
+    {
+      "added": " and",
+      "chunk": 165,
+      "t": 13.28
+    },
+    {
+      "added": " so",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": " my voice",
+      "chunk": 169,
+      "t": 13.6
+    },
+    {
+      "added": " is",
+      "chunk": 173,
+      "t": 13.92
+    },
+    {
+      "added": " probably",
+      "chunk": 175,
+      "t": 14.08
+    },
+    {
+      "added": " cricky",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": ".",
+      "chunk": 192,
+      "t": 15.36
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample1",
+  "final_committed": "Hey, supposed I should take out the mouth card before I start talking here This isn't the best time to capture my voice because I'm a little tired and so my voice is probably cricky.",
+  "final_text": "Hey, supposed I should take out the mouth card before I start talking here This isn't the best time to capture my voice because I'm a little tired and so my voice is probably cricky.",
+  "finalize_ms": 167.07306499999999,
+  "load_ms": 1074.5953200000001,
+  "model": "tcpp-R1-160ms",
+  "n_chunks": 192,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1085.41796875,
+  "revisions": [],
+  "rtf": 0.739467822591146,
+  "tentative_log": [],
+  "threads": 4,
+  "total_compute_s": 11.358225755000001
+}

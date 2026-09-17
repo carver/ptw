@@ -1,0 +1,384 @@
+{
+  "att_right": 1,
+  "audio_s": 24.8685625,
+  "chunk_max_ms": 252.46876200000003,
+  "chunk_mean_ms": 50.333979157556264,
+  "chunk_p95_ms": 107.87412,
+  "commit_log": [
+    {
+      "added": "So",
+      "chunk": 67,
+      "t": 5.44
+    },
+    {
+      "added": " what is",
+      "chunk": 75,
+      "t": 6.08
+    },
+    {
+      "added": " it",
+      "chunk": 77,
+      "t": 6.24
+    },
+    {
+      "added": " that",
+      "chunk": 79,
+      "t": 6.4
+    },
+    {
+      "added": " we",
+      "chunk": 81,
+      "t": 6.56
+    },
+    {
+      "added": " want",
+      "chunk": 83,
+      "t": 6.72
+    },
+    {
+      "added": " here",
+      "chunk": 89,
+      "t": 7.2
+    },
+    {
+      "added": "?",
+      "chunk": 93,
+      "t": 7.52
+    },
+    {
+      "added": " I",
+      "chunk": 95,
+      "t": 7.68
+    },
+    {
+      "added": " guess",
+      "chunk": 97,
+      "t": 7.84
+    },
+    {
+      "added": " I",
+      "chunk": 99,
+      "t": 8.0
+    },
+    {
+      "added": " could",
+      "chunk": 101,
+      "t": 8.16
+    },
+    {
+      "added": " just",
+      "chunk": 103,
+      "t": 8.32
+    },
+    {
+      "added": " read",
+      "chunk": 105,
+      "t": 8.48
+    },
+    {
+      "added": " back",
+      "chunk": 109,
+      "t": 8.8
+    },
+    {
+      "added": " something",
+      "chunk": 113,
+      "t": 9.12
+    },
+    {
+      "added": " that",
+      "chunk": 121,
+      "t": 9.76
+    },
+    {
+      "added": " you",
+      "chunk": 123,
+      "t": 9.92
+    },
+    {
+      "added": " wrote",
+      "chunk": 125,
+      "t": 10.08
+    },
+    {
+      "added": " to",
+      "chunk": 127,
+      "t": 10.24
+    },
+    {
+      "added": " me",
+      "chunk": 129,
+      "t": 10.4
+    },
+    {
+      "added": ".",
+      "chunk": 147,
+      "t": 11.84
+    },
+    {
+      "added": " Hot",
+      "chunk": 153,
+      "t": 12.32
+    },
+    {
+      "added": "ke",
+      "chunk": 155,
+      "t": 12.48
+    },
+    {
+      "added": "y",
+      "chunk": 157,
+      "t": 12.64
+    },
+    {
+      "added": " with",
+      "chunk": 159,
+      "t": 12.8
+    },
+    {
+      "added": " release",
+      "chunk": 163,
+      "t": 13.12
+    },
+    {
+      "added": " det",
+      "chunk": 165,
+      "t": 13.28
+    },
+    {
+      "added": "ect",
+      "chunk": 167,
+      "t": 13.44
+    },
+    {
+      "added": "ion",
+      "chunk": 169,
+      "t": 13.6
+    },
+    {
+      "added": " on",
+      "chunk": 179,
+      "t": 14.4
+    },
+    {
+      "added": " GN",
+      "chunk": 181,
+      "t": 14.56
+    },
+    {
+      "added": "OME",
+      "chunk": 183,
+      "t": 14.72
+    },
+    {
+      "added": " 4",
+      "chunk": 185,
+      "t": 14.88
+    },
+    {
+      "added": "6",
+      "chunk": 187,
+      "t": 15.04
+    },
+    {
+      "added": ", the",
+      "chunk": 193,
+      "t": 15.52
+    },
+    {
+      "added": " global",
+      "chunk": 195,
+      "t": 15.68
+    },
+    {
+      "added": " short",
+      "chunk": 197,
+      "t": 15.84
+    },
+    {
+      "added": "cut",
+      "chunk": 199,
+      "t": 16.0
+    },
+    {
+      "added": "s",
+      "chunk": 201,
+      "t": 16.16
+    },
+    {
+      "added": " port",
+      "chunk": 203,
+      "t": 16.32
+    },
+    {
+      "added": "al",
+      "chunk": 205,
+      "t": 16.48
+    },
+    {
+      "added": " has",
+      "chunk": 207,
+      "t": 16.64
+    },
+    {
+      "added": " no",
+      "chunk": 209,
+      "t": 16.8
+    },
+    {
+      "added": " back",
+      "chunk": 211,
+      "t": 16.96
+    },
+    {
+      "added": " end",
+      "chunk": 215,
+      "t": 17.28
+    },
+    {
+      "added": ".",
+      "chunk": 221,
+      "t": 17.76
+    },
+    {
+      "added": " It",
+      "chunk": 223,
+      "t": 17.92
+    },
+    {
+      "added": " erupt",
+      "chunk": 225,
+      "t": 18.08
+    },
+    {
+      "added": "ed",
+      "chunk": 227,
+      "t": 18.24
+    },
+    {
+      "added": " GN",
+      "chunk": 229,
+      "t": 18.4
+    },
+    {
+      "added": "OM",
+      "chunk": 231,
+      "t": 18.56
+    },
+    {
+      "added": "E",
+      "chunk": 233,
+      "t": 18.72
+    },
+    {
+      "added": " 4",
+      "chunk": 235,
+      "t": 18.88
+    },
+    {
+      "added": "8",
+      "chunk": 237,
+      "t": 19.04
+    },
+    {
+      "added": ". And",
+      "chunk": 247,
+      "t": 19.84
+    },
+    {
+      "added": " GN",
+      "chunk": 249,
+      "t": 20.0
+    },
+    {
+      "added": "OM",
+      "chunk": 251,
+      "t": 20.16
+    },
+    {
+      "added": "E",
+      "chunk": 253,
+      "t": 20.32
+    },
+    {
+      "added": " shell",
+      "chunk": 259,
+      "t": 20.8
+    },
+    {
+      "added": "'s",
+      "chunk": 261,
+      "t": 20.96
+    },
+    {
+      "added": " own",
+      "chunk": 263,
+      "t": 21.12
+    },
+    {
+      "added": " grab",
+      "chunk": 269,
+      "t": 21.6
+    },
+    {
+      "added": " A",
+      "chunk": 271,
+      "t": 21.76
+    },
+    {
+      "added": "P",
+      "chunk": 273,
+      "t": 21.92
+    },
+    {
+      "added": "I",
+      "chunk": 275,
+      "t": 22.08
+    },
+    {
+      "added": " is",
+      "chunk": 279,
+      "t": 22.4
+    },
+    {
+      "added": " close",
+      "chunk": 281,
+      "t": 22.56
+    },
+    {
+      "added": " to",
+      "chunk": 283,
+      "t": 22.72
+    },
+    {
+      "added": " third",
+      "chunk": 285,
+      "t": 22.88
+    },
+    {
+      "added": " parties",
+      "chunk": 289,
+      "t": 23.2
+    },
+    {
+      "added": ".",
+      "chunk": 311,
+      "t": 24.8685625
+    }
+  ],
+  "engine": "transcribe-cpp",
+  "file": "sample3",
+  "final_committed": "So what is it that we want here? I guess I could just read back something that you wrote to me. Hotkey with release detection on GNOME 46, the global shortcuts portal has no back end. It erupted GNOME 48. And GNOME shell's own grab API is close to third parties.",
+  "final_text": "So what is it that we want here? I guess I could just read back something that you wrote to me. Hotkey with release detection on GNOME 46, the global shortcuts portal has no back end. It erupted GNOME 48. And GNOME shell's own grab API is close to third parties.",
+  "finalize_ms": 68.13928800000001,
+  "load_ms": 806.785198,
+  "model": "tcpp-R1-160ms",
+  "n_chunks": 311,
+  "n_tentative_changes": 0,
+  "peak_rss_mb": 1094.00390625,
+  "revisions": [],
+  "rtf": 0.6294641082692254,
+  "tentative_log": [],
+  "threads": 2,
+  "total_compute_s": 15.653867517999998
+}
