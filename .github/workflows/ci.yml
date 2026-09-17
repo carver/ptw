@@ -16,6 +16,18 @@ env:
   APT_DEPS: libasound2-dev libxkbcommon-dev
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $APT_DEPS
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +41,7 @@ jobs:
   # built: 0.1.YYYYMMDDHHMM (UTC). A second push inside the same minute
   # finds the tag taken and skips.
   release:
-    needs: test
+    needs: [lint, test]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
