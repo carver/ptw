@@ -50,6 +50,12 @@ Next ID: 16
    onnxruntime at load (its static archive is built on manylinux2014;
    mixing it with this box's GCC breaks `std::regex`); build in that
    container or wait for the release.
+   When the PR lands in a release:
+    - Bump the harness crate to that version
+    - pre-download the archive with curl per the proxy TIL
+    - run target/bench/harness/run_beam.sh
+    - read the revision-depth numbers before deciding how ptw holds text back under beam search
+
 7. **Moonshine v2** only if a faster x86 build appears; 2–4x slower and
    less accurate on our samples (see `docs/research/engine-benchmark.md`).
 8. **Benchmark reference transcripts** in `bench/results/offline` were not
