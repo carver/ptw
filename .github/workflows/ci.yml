@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Build deps from CLAUDE.md; cmake, a C++ toolchain and pkg-config ship
+  # with the runner image.
+  APT_DEPS: libasound2-dev libxkbcommon-dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $APT_DEPS
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+
+  # Every push to main ships a release build, versioned by the minute it was
+  # built: 0.1.YYYYMMDDHHMM (UTC). A second push inside the same minute
+  # finds the tag taken and skips.
+  release:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $APT_DEPS
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Stamp the version
+        id: stamp
+        run: |
+          version="0.1.$(date -u +%Y%m%d%H%M)"
+          sed -i "s/^version = \"0.1.0\"$/version = \"$version\"/" Cargo.toml
+          grep -q "^version = \"$version\"$" Cargo.toml
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: cargo build --release -p ptw
+      - name: Package
+        run: |
+          v=${{ steps.stamp.outputs.version }}
+          dir=ptw-$v-linux-x86_64
+          mkdir "$dir"
+          cp target/release/ptw README.md LICENSE CONTEXT.md "$dir"/
+          tar czf "$dir.tar.gz" "$dir"
+          ./target/release/ptw --version
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${{ steps.stamp.outputs.version }}
+          if gh release view "v$v" >/dev/null 2>&1; then
+            echo "release v$v exists; skipping"
+            exit 0
+          fi
+          gh release create "v$v" "ptw-$v-linux-x86_64.tar.gz" \
+            --title "ptw $v" \
+            --notes "$(git log -1 --pretty='%s%n%n%b' | sed '/^Co-Authored-By:/d;/^Claude-Session:/d')"
