@@ -13,7 +13,7 @@ bench/
   run_extras.sh   2-thread runs, repeats, Moonshine diagnostics
   run_beam.sh     greedy vs modified_beam_search vs beam+hotwords (sherpa-onnx)
   analyze.py      JSON logs to the markdown tables in the report
-  keyterms.txt    the Custom words used for biasing runs
+  keyterms.txt    the Custom words used for biasing runs (local only, gitignored)
   results/        one JSON per run and file; offline/ holds the Parakeet reference
 ```
 
@@ -28,8 +28,9 @@ target/bench/
 ```
 
 Resample with `ffmpeg -i "tests/data/ptw sample 1.flac" -ar 16000 -ac 1 target/bench/sample1.wav`.
-Samples 1 to 4 are in git; sample 5 stays on the host, so `sample5` rows in
-`results/` cannot be regenerated from a clean checkout.
+Samples 1 to 4 are in git. Sample 5, the keyterms list and every result
+that quotes it stay on the host, gitignored, so the `sample5` columns in the
+tables cannot be regenerated from a clean checkout.
 
 ## Building
 

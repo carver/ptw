@@ -1,2 +1,6 @@
 /target
 tests/data/ptw sample 5.flac
+# Names and places from the recordings stay local
+bench/keyterms.txt
+bench/results/keyterms/
+bench/results/*/*sample5*
