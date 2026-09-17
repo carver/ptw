@@ -6,18 +6,21 @@ permanent: a new entry takes the Next ID below (bump it) and goes at the
 bottom of its section. Delete an entry when it is done, git remembers;
 leave the gap, never renumber.
 
-Next ID: 15
+Next ID: 16
 
 ## Host bring-up
 
 1. **The Key proxy has only done a plain Hold on a real keyboard.**
    ADR 0006 (everything else on the first host pass is verified as of
    2026-08-29, audio cues and autorepeat included). Still to check: a
-   second keyboard plugged in while running, and keys stuck down after
-   quit. A key held across the grab at start killed z until 2026-09-17
-   (ADR 0006); the grab now waits it out. Alt+click can only lose its
-   Alt inside the Deferral, so it is a thing to notice in use, not to
-   test.
+   second keyboard plugged in while running, and a chord held across a
+   restart, which should now log `keys held down` and leave every key
+   alive once released (the fix for the dead z, ADR 0006, has only run
+   with idle hands). Quit looks safe by reading mutter and libinput:
+   removing the proxy device releases its keys, and a release with no
+   press is ignored. Alt+click can only lose its Alt inside the
+   Deferral, so it is a thing to notice in use, not to test.
+
 ## Correction and hold-back
 
 3. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the
@@ -50,6 +53,12 @@ Next ID: 15
     types a z, because only modifier presses are deferred (ADR 0006).
 11. **Toggle mode has no UI.** `ptw toggle` over D-Bus works; nothing
     exposes it.
+15. **`ptw doctor` cannot see a key the compositor holds down.** The dead
+    z took a wizard to place: the kernel showed nothing down, only a
+    throwaway window's `wl_keyboard.enter` (under `WAYLAND_DEBUG=1`)
+    showed the compositor holding one key. A doctor line that opens such
+    a window and reports the count, with the stop-ptw-then-press-once
+    cure, turns the next one into a one-liner.
 
 ## Packaging
 
