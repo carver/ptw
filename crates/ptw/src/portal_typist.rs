@@ -111,12 +111,18 @@ impl Typist for PortalTypist {
     }
 
     /// Opens a fresh portal session; the saved restore token keeps the
-    /// dialog away. The dead session needs no goodbye.
+    /// dialog away. The old session is closed first: if a press got
+    /// through and its release did not, mutter keeps that key down for
+    /// the whole desktop until the session goes away.
     fn reconnect(&mut self) -> Result<(), TypistError> {
         let runtime = self.runtime.clone();
+        let old = Arc::clone(&self.session);
         *self = self
             .runtime
-            .block_on(Self::connect(runtime))
+            .block_on(async {
+                old.close().await.ok();
+                Self::connect(runtime).await
+            })
             .map_err(|e| TypistError::Backend(format!("{e:#}")))?;
         Ok(())
     }
