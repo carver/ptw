@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 
 use evdev::uinput::VirtualDevice;
 use evdev::{AttributeSet, Device, EventSummary, EventType, InputEvent, KeyCode};
+use ptw_core::grab::{Grabbable, grab_when_idle};
 use ptw_core::hotkey::{Chord, KeyAction, KeyEvent};
 use ptw_core::proxy::{KeyProxy, Mode, Output};
 use tracing::{debug, info, warn};
@@ -28,9 +29,10 @@ pub const OWN_DEVICE_NAME: &str = "ptw virtual keyboard";
 pub const PROXY_DEVICE_NAME: &str = "ptw keyboard proxy";
 
 const RESCAN_EVERY: Duration = Duration::from_secs(3);
-/// How long to wait for every key to come up before grabbing, so a
-/// release the compositor is waiting for is never swallowed.
-const KEYS_UP_TIMEOUT: Duration = Duration::from_secs(1);
+/// The grab waits for every key to come up, however long that takes
+/// (`ptw_core::grab`); past this it says so in the log.
+const KEYS_UP_WARN_AFTER: Duration = Duration::from_secs(1);
+const KEYS_UP_POLL: Duration = Duration::from_millis(10);
 
 /// Our own virtual keyboards must never be read back as Hotkey input.
 pub fn is_keyboard(device: &Device) -> bool {
@@ -213,8 +215,7 @@ fn scan(shared: &Arc<Shared>, open: &Arc<Mutex<HashSet<PathBuf>>>) {
 fn read_until_error(mut device: Device, shared: &Shared) {
     let name = device.name().unwrap_or("?").to_string();
     if shared.lock().proxy.mode() == Mode::Grab {
-        wait_for_keys_up(&device);
-        match device.grab() {
+        match grab_once_keys_are_up(&mut device, &name) {
             Ok(()) => info!(name, "keyboard grabbed"),
             Err(e) => warn!(name, error = %e, "cannot grab keyboard; its Hotkey will leak"),
         }
@@ -252,16 +253,59 @@ fn read_until_error(mut device: Device, shared: &Shared) {
     }
 }
 
-fn wait_for_keys_up(device: &Device) {
-    let until = Instant::now() + KEYS_UP_TIMEOUT;
-    while Instant::now() < until {
-        match device.get_key_state() {
-            Ok(down) if down.iter().next().is_some() => {
-                debug!("waiting for keys to come up before grabbing");
-                thread::sleep(Duration::from_millis(10));
-            }
-            _ => return,
+/// A grab taken while a key is down leaves that key dead for the whole
+/// desktop (`ptw_core::grab`), so this waits, however long it takes.
+fn grab_once_keys_are_up(device: &mut Device, name: &str) -> std::io::Result<()> {
+    let started = Instant::now();
+    let mut warned = false;
+    grab_when_idle(&mut Physical(device), |down| {
+        let keys = down
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(" ");
+        if !warned && started.elapsed() >= KEYS_UP_WARN_AFTER {
+            warned = true;
+            warn!(
+                name,
+                keys, "keys held down; the grab waits for them to come up"
+            );
+        } else {
+            debug!(keys, "waiting for keys to come up before grabbing");
         }
+        thread::sleep(KEYS_UP_POLL);
+    })?;
+    if warned {
+        info!(
+            name,
+            waited_ms = started.elapsed().as_millis(),
+            "keys came up"
+        );
+    }
+    Ok(())
+}
+
+/// A real keyboard under /dev/input, as `ptw_core::grab` sees it.
+struct Physical<'a>(&'a mut Device);
+
+impl Grabbable for Physical<'_> {
+    type Error = std::io::Error;
+
+    fn keys_down(&mut self) -> std::io::Result<Vec<ptw_core::keys::KeyCode>> {
+        Ok(self
+            .0
+            .get_key_state()?
+            .iter()
+            .map(|key| ptw_core::keys::KeyCode(key.0))
+            .collect())
+    }
+
+    fn grab(&mut self) -> std::io::Result<()> {
+        self.0.grab()
+    }
+
+    fn ungrab(&mut self) -> std::io::Result<()> {
+        self.0.ungrab()
     }
 }
 

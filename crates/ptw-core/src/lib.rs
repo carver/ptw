@@ -5,6 +5,7 @@ pub mod config;
 pub mod correction;
 pub mod dictation;
 pub mod engine;
+pub mod grab;
 pub mod hotkey;
 pub mod keys;
 pub mod layout;

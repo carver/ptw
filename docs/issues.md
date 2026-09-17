@@ -14,8 +14,10 @@ Next ID: 15
    ADR 0006 (everything else on the first host pass is verified as of
    2026-08-29, audio cues and autorepeat included). Still to check: a
    second keyboard plugged in while running, and keys stuck down after
-   start or quit. Alt+click can only lose its Alt inside the Deferral,
-   so it is a thing to notice in use, not to test.
+   quit. A key held across the grab at start killed z until 2026-09-17
+   (ADR 0006); the grab now waits it out. Alt+click can only lose its
+   Alt inside the Deferral, so it is a thing to notice in use, not to
+   test.
 ## Correction and hold-back
 
 3. **Thresholds are set from five recordings.** ACCEPT_BELOW 0.15 and the

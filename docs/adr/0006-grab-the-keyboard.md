@@ -17,6 +17,6 @@ The Deferral started at 150 ms on the belief that chords land within 100 ms. On 
 
 - Needs write access to `/dev/uinput`; `ptw setup` installs a udev rule for the `input` group. Without it ptw falls back to ungrabbed reading, where text waits for the modifiers to come up (typed at release, like Handy).
 - A hung ptw could hold the keyboard. Mitigations: the reader thread that owns the grab also runs the proxy and writes to uinput, so the daemon loop, the portal, the tray and the Engine are not on the key path; a reader crash drops the device and the kernel releases the grab. Killing the daemon always frees the keyboard.
-- The grab waits until every key is up, so a release the compositor is waiting for is never swallowed.
+- The grab waits until every key is up, for as long as that takes, and checks again once it holds the keyboard (`ptw_core::grab`). Mutter counts each key across all devices and libinput per device, so one release swallowed by the grab leaves that key dead for the whole desktop until ptw stops and the key is pressed once more. A one-second timeout on the wait did exactly that to Dvorak's z (2026-09-17).
 - Chord keys pressed in the wrong order (z before Alt) reach the app before the chord is recognised; only modifier presses are deferred, because deferring letters would delay all typing.
 - The chord never reaches the apps, so lone modifiers (`RightCtrl`) are now usable Hotkeys without flashing menus, at the price of that modifier.
