@@ -37,9 +37,19 @@ Next ID: 16
 5. **160 ms lookahead stays opt-in.** It costs 2–2.5x CPU and the commit
    lag gain is under half a second. Document in the settings dialog when
    a low-latency mode is worth it.
-6. **sherpa-onnx as a second Engine** once its hotwords PR
-   (k2-fsa/sherpa-onnx#3895) merges: model-side biasing for custom words
-   would beat post-hoc Correction.
+6. **sherpa-onnx as a second Engine** for model-side biasing of Custom
+   words. Its hotwords PR (k2-fsa/sherpa-onnx#3895) merged 2026-09-14 but
+   is in no release yet (v1.13.8 is 2026-09-10); the C API did not change,
+   so the next release needs only a crate bump. Same Model, other runtime:
+   transcribe.cpp stays selectable through `engine.kind`. Measure first:
+   `target/bench/harness/run_beam.sh` runs greedy, beam-4 and beam-4 with
+   the keyterms as hotwords and logs how many words each revision reverts.
+   Beam search can revise earlier text between chunks, which the Typist
+   cannot take back, so the Committed/Tentative split needs a rule before
+   this ships. A local source build of sherpa-onnx crashes inside
+   onnxruntime at load (its static archive is built on manylinux2014;
+   mixing it with this box's GCC breaks `std::regex`); build in that
+   container or wait for the release.
 7. **Moonshine v2** only if a faster x86 build appears; 2–4x slower and
    less accurate on our samples (see `docs/research/engine-benchmark.md`).
 8. **Benchmark reference transcripts** in `target/bench/` were not
