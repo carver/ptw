@@ -28,6 +28,8 @@ target/bench/
 ```
 
 Resample with `ffmpeg -i "tests/data/ptw sample 1.flac" -ar 16000 -ac 1 target/bench/sample1.wav`.
+Samples 1 to 4 are in git; sample 5 stays on the host, so `sample5` rows in
+`results/` cannot be regenerated from a clean checkout.
 
 ## Building
 
