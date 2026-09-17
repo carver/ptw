@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use evdev::uinput::VirtualDevice;
 use evdev::{AttributeSet, Device, EventSummary, EventType, InputEvent, KeyCode};
@@ -214,9 +214,16 @@ fn scan(shared: &Arc<Shared>, open: &Arc<Mutex<HashSet<PathBuf>>>) {
 
 fn read_until_error(mut device: Device, shared: &Shared) {
     let name = device.name().unwrap_or("?").to_string();
+    // Keys from before the grab reached the compositor directly; replaying
+    // them would type them twice or start a phantom Hold. They are all
+    // complete press-release pairs, because the grab waits for that.
+    let mut grabbed_at = None;
     if shared.lock().proxy.mode() == Mode::Grab {
         match grab_once_keys_are_up(&mut device, &name) {
-            Ok(()) => info!(name, "keyboard grabbed"),
+            Ok(()) => {
+                grabbed_at = Some(SystemTime::now());
+                info!(name, "keyboard grabbed");
+            }
             Err(e) => warn!(name, error = %e, "cannot grab keyboard; its Hotkey will leak"),
         }
     }
@@ -232,6 +239,10 @@ fn read_until_error(mut device: Device, shared: &Shared) {
             let EventSummary::Key(_, key, value) = event.destructure() else {
                 continue;
             };
+            if grabbed_at.is_some_and(|at| event.timestamp() < at) {
+                debug!(?key, value, "dropping a key from before the grab");
+                continue;
+            }
             let action = match value {
                 0 => KeyAction::Release,
                 1 => KeyAction::Press,
