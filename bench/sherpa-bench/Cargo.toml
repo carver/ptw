@@ -7,3 +7,8 @@ edition = "2024"
 hound = "3.5.1"
 serde_json = "1.0.151"
 sherpa-onnx = "1.13.8"
+
+# Makes the sherpa-onnx-sys build script's ureq trust the OS certificate store,
+# so its archive download works behind a TLS-intercepting proxy.
+[build-dependencies]
+ureq = { version = "2.12", features = ["native-certs"] }

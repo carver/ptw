@@ -38,17 +38,24 @@ The harness crates are excluded from the workspace, so build them from their own
 directory with a target dir under `target/bench/cargo`.
 
 sherpa-onnx: the crate's build script downloads a prebuilt static archive from
-GitHub. Behind a TLS-intercepting proxy that download fails (rustls does not
-trust the injected CA), so fetch the archive with curl and point the build
-script at it:
+GitHub with ureq. The harness enables ureq's `native-certs` feature as a
+build-dependency, which Cargo also applies to the sherpa-onnx build script's copy,
+so the download trusts the OS certificate store and works behind a
+TLS-intercepting proxy:
+
+```sh
+cd bench/sherpa-bench
+cargo build --release --target-dir ../../target/bench/cargo/sherpa-bench-beam
+```
+
+Each fresh target dir downloads the archive again. To reuse one copy, fetch it
+once and point `SHERPA_ONNX_ARCHIVE_DIR` at its directory:
 
 ```sh
 mkdir -p target/bench/libs/archives
 curl -sSL -o target/bench/libs/archives/sherpa-onnx-v1.13.8-linux-x64-static-lib.tar.bz2 \
   https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.8/sherpa-onnx-v1.13.8-linux-x64-static-lib.tar.bz2
-cd bench/sherpa-bench
-SHERPA_ONNX_ARCHIVE_DIR=$PWD/../../target/bench/libs/archives \
-  cargo build --release --target-dir ../../target/bench/cargo/sherpa-bench-beam
+export SHERPA_ONNX_ARCHIVE_DIR=$PWD/target/bench/libs/archives
 ```
 
 The archive version must match the `sherpa-onnx` version in `Cargo.toml`.
