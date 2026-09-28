@@ -20,3 +20,14 @@ proptest = "1"
 [profile.release]
 lto = "thin"
 codegen-units = 4
+
+# Light optimisation for the workspace crates keeps tests quick while still
+# debuggable. Dependencies get more, and no debug info, which keeps target/
+# small on the shared mount (the sandbox disk is small too). This also
+# builds transcribe.cpp as Release rather than Debug in tests.
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
