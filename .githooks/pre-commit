@@ -1,0 +1,9 @@
+#!/bin/sh
+# Format and lint what's staged, as CI's lint job does, in a few seconds
+# once target/ is warm. Enabled by `git config core.hooksPath .githooks`
+# (README, "Develop"). The tests are too slow for this; agent-pre-commit
+# runs them.
+set -e
+. "$(dirname "$0")/snapshot.sh"
+cargo fmt --all --check
+cargo clippy -q --workspace --all-targets -- -D warnings

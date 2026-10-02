@@ -60,9 +60,16 @@ gives a tap-to-start, tap-to-stop mode with no `input` group needed.
 ## Develop
 
 ```sh
+git config core.hooksPath .githooks  # once per clone
 cargo test --workspace
 ptw transcribe --realtime some.wav   # the daemon's text path, no microphone
 ```
+
+The `pre-commit` hook in `.githooks/` runs `cargo fmt --check` and
+`clippy -D warnings` on what's staged. `.githooks/agent-pre-commit` runs
+what CI runs (`cargo test --workspace`, then the same lint) on what's
+staged; `agent-commit-gate` (llm-toolbox) runs it before an agent's
+commit, or run it by hand. Both need `rsync`.
 
 `crates/ptw-core` has no desktop dependencies and holds everything with
 interesting logic: hotkey chords, the key proxy, correction, hold-back,
