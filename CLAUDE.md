@@ -1,6 +1,6 @@
 # ptw
 
-Push-to-talk dictation for Linux. Read `CONTEXT.md` for the vocabulary
+Push-to-talk dictation for Linux. Read `GLOSSARY.md` for the vocabulary
 (Hold, Dictation, Committed text, Hold-back, Typist) and use it in code and
 prose. `docs/adr/` holds the decisions that look odd without their reasons;
 `docs/planning-log.md` the design interview; `docs/research/` the sources;

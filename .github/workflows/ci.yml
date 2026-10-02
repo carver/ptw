@@ -64,7 +64,7 @@ jobs:
           v=${{ steps.stamp.outputs.version }}
           dir=ptw-$v-linux-x86_64
           mkdir "$dir"
-          cp target/release/ptw README.md LICENSE CONTEXT.md "$dir"/
+          cp target/release/ptw README.md LICENSE GLOSSARY.md "$dir"/
           tar czf "$dir.tar.gz" "$dir"
           ./target/release/ptw --version
       - name: Publish

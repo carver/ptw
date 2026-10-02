@@ -1,6 +1,6 @@
 # Planning log
 
-Record of the design interview that started the project (2026-08-28). Research behind it: `docs/research/asr-backends.md`, `docs/research/desktop-integration.md`. Vocabulary: `CONTEXT.md`. Decisions with trade-offs: `docs/adr/`.
+Record of the design interview that started the project (2026-08-28). Research behind it: `docs/research/asr-backends.md`, `docs/research/desktop-integration.md`. Vocabulary: `GLOSSARY.md`. Decisions with trade-offs: `docs/adr/`.
 
 ## Facts established
 

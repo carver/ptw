@@ -6,7 +6,7 @@ are still talking. Linux-first, CPU-only, offline. Think
 the recognizer commits it, not pasted when you let go.
 
 Status: pre-alpha, built for one machine (Ubuntu 24.04, GNOME 46 on
-Wayland). Vocabulary is in `CONTEXT.md`; the reasoning behind the odd
+Wayland). Vocabulary is in `GLOSSARY.md`; the reasoning behind the odd
 choices is in `docs/adr/`; the interview that started it is in
 `docs/planning-log.md`.
 
