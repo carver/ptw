@@ -1,8 +1,10 @@
 #!/bin/sh
 # What CI runs, on what's staged: the test suite, then the pre-commit hook's
-# fmt and clippy. bin/agent-commit-gate (llm-toolbox) runs it before an
-# agent's `git commit`; run it by hand with `agent-commit-gate --run`.
+# fmt and clippy. The pre-commit hook runs it first when $AI_AGENT is set
+# (llm-toolbox's agent-commit-gate); run it by hand too.
 set -e
+# So the pre-commit hook does not run this script again.
+export AGENT_PRE_COMMIT=1
 hooks=$(cd "$(dirname "$0")" && pwd)
 . "$hooks/snapshot.sh"
 cargo test -q --workspace
