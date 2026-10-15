@@ -38,14 +38,15 @@ impl App {
         })
     }
 
-    fn sync_custom_words(&mut self) {
-        self.config.custom_words = self
-            .custom_words_text
+    fn custom_words(&self) -> impl Iterator<Item = &str> {
+        self.custom_words_text
             .lines()
             .map(str::trim)
             .filter(|l| !l.is_empty())
-            .map(String::from)
-            .collect();
+    }
+
+    fn sync_custom_words(&mut self) {
+        self.config.custom_words = self.custom_words().map(String::from).collect();
     }
 
     fn hotkey_problem(&self) -> Option<String> {
@@ -292,10 +293,7 @@ impl App {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let dirty = self.config != self.saved
                     || self
-                        .custom_words_text
-                        .lines()
-                        .map(str::trim)
-                        .filter(|l| !l.is_empty())
+                        .custom_words()
                         .ne(self.saved.custom_words.iter().map(String::as_str));
                 if ui.add_enabled(dirty, egui::Button::new("Save")).clicked() {
                     self.save();
