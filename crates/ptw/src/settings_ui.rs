@@ -12,6 +12,8 @@ use crate::{audio, engines};
 
 const LOOKAHEADS_MS: [u32; 4] = [80, 160, 560, 1120];
 
+const DEFERRAL_HINT: &str = "After a Hotkey modifier press, the Key proxy waits this long for the rest of the Hotkey before passing the modifier on. Press the rest later and the desktop sees the modifier. A click with the modifier held, made within the Deferral, arrives without the modifier.";
+
 struct App {
     path: PathBuf,
     config: Config,
@@ -89,18 +91,13 @@ impl App {
 
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            egui::Frame::new()
-                .inner_margin(egui::Margin::same(20))
-                .show(ui, |ui| {
-                    ui.spacing_mut().item_spacing = egui::vec2(12.0, 8.0);
-                    self.hotkey_section(ui);
-                    self.custom_words_section(ui);
-                    self.engine_section(ui);
-                    self.audio_section(ui);
-                    self.typing_section(ui);
-                    self.save_row(ui);
-                });
+        // The save row is a panel of its own so it stays in view however
+        // small the window is; the sections scroll above it.
+        egui::Panel::bottom("save_row")
+            .frame(egui::Frame::side_top_panel(ui.style()).inner_margin(egui::Margin::same(12)))
+            .show(ui, |ui| self.save_row(ui));
+        egui::CentralPanel::no_frame().show(ui, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| self.sections(ui));
         });
     }
 }
@@ -114,6 +111,8 @@ fn section(ui: &mut egui::Ui, title: &str, hint: &str) {
     ui.add_space(4.0);
 }
 
+/// Text in a Grid cell does not wrap; put it in `horizontal_wrapped` so a
+/// narrow window wraps it instead of clipping it at the right edge.
 fn grid(ui: &mut egui::Ui, id: &str, add_rows: impl FnOnce(&mut egui::Ui)) {
     egui::Grid::new(id)
         .num_columns(2)
@@ -123,15 +122,28 @@ fn grid(ui: &mut egui::Ui, id: &str, add_rows: impl FnOnce(&mut egui::Ui)) {
 }
 
 impl App {
+    fn sections(&mut self, ui: &mut egui::Ui) {
+        egui::Frame::new()
+            .inner_margin(egui::Margin::same(20))
+            .show(ui, |ui| {
+                ui.spacing_mut().item_spacing = egui::vec2(12.0, 8.0);
+                self.hotkey_section(ui);
+                self.custom_words_section(ui);
+                self.engine_section(ui);
+                self.audio_section(ui);
+                self.typing_section(ui);
+            });
+    }
+
     fn hotkey_section(&mut self, ui: &mut egui::Ui) {
         section(
             ui,
             "Hotkey",
-            "Hold it to talk. Keys joined with +, e.g. Alt+z, RightCtrl, Ctrl+Shift+Space. Any other key pressed during a hold cancels it.",
+            "Hold it to talk. Keys joined with +, e.g. Alt+z, RightCtrl, Ctrl+Shift+Space. Any other key pressed during a Hold cancels it.",
         );
         grid(ui, "hotkey", |ui| {
             ui.label("Hotkey");
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
                 ui.add(egui::TextEdit::singleline(&mut self.config.hotkey).desired_width(160.0));
                 match (
                     self.hotkey_problem(),
@@ -151,14 +163,15 @@ impl App {
                 }
             });
             ui.end_row();
-            ui.label("Deferral");
+            ui.label("Deferral").on_hover_text(DEFERRAL_HINT);
             ui.horizontal(|ui| {
                 ui.add(
                     egui::DragValue::new(&mut self.config.deferral_ms)
                         .range(0..=2000)
                         .suffix(" ms"),
-                );
-                ui.weak("A chord modifier waits this long for the rest of the chord. A slower chord leaks the modifier. An Alt+click inside it loses its Alt.");
+                )
+                .on_hover_text(DEFERRAL_HINT);
+                ui.weak("(?)").on_hover_text(DEFERRAL_HINT);
             });
             ui.end_row();
         });
@@ -216,7 +229,7 @@ impl App {
             ui.end_row();
 
             ui.label("Threads");
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
                 ui.add(egui::DragValue::new(&mut self.config.engine.threads).range(0..=64));
                 ui.weak("2 is plenty; 0 takes every core and is slower");
             });
@@ -236,6 +249,7 @@ impl App {
             egui::ComboBox::from_id_salt("microphone")
                 .selected_text(mic_label)
                 .width(300.0)
+                .truncate()
                 .show_ui(ui, |ui| {
                     ui.selectable_value(&mut self.config.audio.device, String::new(), "default");
                     for name in &self.microphones {
@@ -245,10 +259,12 @@ impl App {
             ui.end_row();
 
             ui.label("Cues");
-            ui.checkbox(
-                &mut self.config.audio.cues,
-                "play a sound when a hold starts and ends",
-            );
+            ui.horizontal_wrapped(|ui| {
+                ui.checkbox(
+                    &mut self.config.audio.cues,
+                    "play a sound when a Hold starts and ends",
+                );
+            });
             ui.end_row();
         });
     }
@@ -272,10 +288,7 @@ impl App {
     }
 
     fn save_row(&mut self, ui: &mut egui::Ui) {
-        ui.add_space(16.0);
-        ui.separator();
         ui.horizontal(|ui| {
-            ui.weak(self.path.display().to_string());
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let dirty = self.config != self.saved
                     || self
@@ -290,10 +303,14 @@ impl App {
                 if ui.button("Restart daemon").clicked() {
                     self.restart_daemon();
                 }
+                ui.add(
+                    egui::Label::new(egui::RichText::new(self.path.display().to_string()).weak())
+                        .truncate(),
+                );
             });
         });
         if !self.status.is_empty() {
-            ui.label(&self.status);
+            ui.add(egui::Label::new(&self.status).wrap());
         }
     }
 }
@@ -302,7 +319,7 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
     let app = App::new(config_path.to_path_buf())?;
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([760.0, 940.0])
+            .with_inner_size([720.0, 640.0])
             .with_min_inner_size([480.0, 400.0])
             .with_title("ptw settings"),
         ..Default::default()
@@ -315,6 +332,8 @@ pub fn run(config_path: &Path) -> anyhow::Result<()> {
                 for font in style.text_styles.values_mut() {
                     font.size *= 1.15;
                 }
+                // Narrower than the minimum window width, so tooltips are never clipped.
+                style.spacing.tooltip_width = 400.0;
             });
             Ok(Box::new(app))
         }),
